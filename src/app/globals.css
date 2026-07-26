@@ -1,26 +1,467 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
+/* ============ AURORA OPS theme tokens ============ */
 @theme inline {
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-sora);
+  --font-mono: var(--font-jetbrains-mono);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Aurora-specific accents, exposed as Tailwind utilities (bg-iris, text-cyan, etc.) */
+  --color-ink: var(--bg);
+  --color-ink-2: var(--bg-2);
+  --color-faint: var(--faint);
+  --color-iris: var(--iris);
+  --color-iris-2: var(--iris-2);
+  --color-cyan: var(--cyan);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-s);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-s);
+  --color-crit: var(--crit);
+  --color-crit-soft: var(--crit-s);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* raw Aurora Ops palette */
+  --bg: #08080e;
+  --bg-2: #0b0b14;
+  --card-glass: rgba(255, 255, 255, 0.035);
+  --card-glass-2: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.09);
+  --line-soft: rgba(255, 255, 255, 0.055);
+  --text: #edeff7;
+  --muted-text: #969db4;
+  --faint: #5c6582;
+  --iris: #7c6bff;
+  --iris-2: #a99bff;
+  --cyan: #3fd0e0;
+  --grad: linear-gradient(135deg, #8a78ff, #3fd0e0);
+  --grad-soft: linear-gradient(135deg, rgba(124, 107, 255, 0.16), rgba(63, 208, 224, 0.12));
+  --ok: #46e0a0;
+  --ok-s: rgba(70, 224, 160, 0.13);
+  --warn: #ffc56b;
+  --warn-s: rgba(255, 197, 107, 0.14);
+  --crit: #ff6b81;
+  --crit-s: rgba(255, 107, 129, 0.13);
+  --aurora-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.7);
+
+  /* shadcn semantic mapping -> Aurora values */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--card-glass);
+  --card-foreground: var(--text);
+  --popover: #0e0e18;
+  --popover-foreground: var(--text);
+  --primary: var(--iris);
+  --primary-foreground: #070810;
+  --secondary: var(--card-glass-2);
+  --secondary-foreground: var(--text);
+  --muted: var(--card-glass-2);
+  --muted-foreground: var(--muted-text);
+  --accent: rgba(124, 107, 255, 0.16);
+  --accent-foreground: var(--text);
+  --destructive: var(--crit);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: rgba(124, 107, 255, 0.55);
+  --chart-1: var(--iris);
+  --chart-2: var(--cyan);
+  --chart-3: var(--ok);
+  --chart-4: var(--warn);
+  --chart-5: var(--crit);
+  --radius: 1rem;
+  --sidebar: var(--bg-2);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--iris);
+  --sidebar-primary-foreground: #070810;
+  --sidebar-accent: var(--card-glass-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans h-full;
+  }
+  body {
+    @apply bg-background text-foreground min-h-screen antialiased;
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(58% 48% at 80% -6%, rgba(124, 107, 255, 0.17), transparent 70%),
+      radial-gradient(48% 42% at 10% 6%, rgba(63, 208, 224, 0.1), transparent 70%);
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection {
+    background: rgba(124, 107, 255, 0.3);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============ Aurora utilities ============ */
+
+/* Deep glass panel — overpowers matrix rain for clear result visibility */
+@utility panel-deep {
+  background: rgba(4, 4, 16, 0.98);
+  border-color: rgba(124, 107, 255, 0.82);
+  box-shadow:
+    0 0 0 1px rgba(63, 208, 224, 0.18),
+    0 0 28px rgba(124, 107, 255, 0.55),
+    0 0 70px rgba(124, 107, 255, 0.28),
+    0 0 140px rgba(63, 208, 224, 0.14),
+    0 32px 90px rgba(0, 0, 0, 0.96),
+    inset 0 0 40px rgba(63, 208, 224, 0.05),
+    inset 0 1px 0 rgba(124, 107, 255, 0.25);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+}
+
+@utility text-grad {
+  background-image: var(--grad);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@utility bg-grad {
+  background-image: var(--grad);
+}
+
+@utility bg-grad-soft {
+  background-image: var(--grad-soft);
+}
+
+@utility spot {
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+    background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(124, 107, 255, 0.16), transparent 60%);
+  }
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+@utility rise {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: aurora-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+@utility rise-d1 {
+  animation-delay: 0.05s;
+}
+@utility rise-d2 {
+  animation-delay: 0.12s;
+}
+@utility rise-d3 {
+  animation-delay: 0.19s;
+}
+@utility rise-d4 {
+  animation-delay: 0.26s;
+}
+
+@utility dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+@utility dot-ok {
+  background: var(--ok);
+  box-shadow: 0 0 0 4px var(--ok-s);
+}
+@utility dot-warn {
+  background: var(--warn);
+  box-shadow: 0 0 0 4px var(--warn-s);
+}
+@utility dot-crit {
+  background: var(--crit);
+  box-shadow: 0 0 0 4px var(--crit-s);
+}
+@utility dot-live {
+  animation: aurora-pulse 2.2s infinite;
+}
+
+@utility aurora-drift {
+  animation: aurora-drift 11s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes aurora-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px var(--ok-s);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(70, 224, 160, 0);
+  }
+}
+@keyframes aurora-drift {
+  to {
+    transform: translate(-22px, 12px) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  [class*="rise-d"] {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
+/* ============ Interactive effects ============ */
+
+/* Typewriter cursor */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Brand easter egg */
+@keyframes egg-in {
+  from { opacity: 0; transform: scale(0.6) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes egg-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.5) translateY(-12px); }
+}
+@keyframes wire-spark {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
+}
+
+/* DO NOT PRESS */
+@keyframes dnp-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,129,0.5), 0 0 20px rgba(255,107,129,0.2); }
+  50%       { box-shadow: 0 0 0 8px rgba(255,107,129,0), 0 0 40px rgba(255,107,129,0.35); }
+}
+
+/* Search item gradient fill on hover */
+@keyframes search-glow-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Speaking cloud shimmer line */
+@keyframes scan-line {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(400%); }
+}
+
+/* Robot eye pulse */
+@keyframes eye-glow {
+  0%, 100% { opacity: 0.8; }
+  50%       { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
+}
+@keyframes eye-scan {
+  0%   { transform: translateX(-3px); }
+  50%  { transform: translateX(3px); }
+  100% { transform: translateX(-3px); }
+}
+
+/* Robot arm wave (CSS animation so no JS setState needed) */
+@keyframes arm-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25%, 75% { transform: rotate(-30deg); }
+  50%       { transform: rotate(-5deg); }
+}
+.wave-arm {
+  transform-box: fill-box;
+  transform-origin: 100% 15%;
+  animation: arm-wave 0.6s ease-in-out infinite;
+}
+
+/* Particle linear electric spark */
+@keyframes spark-fade {
+  0%   { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
+
+@keyframes electric-dash {
+  to { stroke-dashoffset: -9; }
+}
+@keyframes hover-ring-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.3; }
+}
+@keyframes cursor-ripple {
+  from { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
+  to   { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+}
+@keyframes flowing-border {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+@keyframes nav-shimmer {
+  0%   { opacity: 0; }
+  50%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.navbar-flow-line {
+  pointer-events: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(124, 107, 255, 0.8) 20%,
+    rgba(63, 208, 224, 0.9) 50%,
+    rgba(124, 107, 255, 0.8) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: flowing-border 3.5s linear infinite;
+}
+
+/* ============ Orchestration canvas (scoped SVG presentation classes) ============ */
+.orch-canvas {
+  background: radial-gradient(70% 80% at 50% 30%, rgba(124, 107, 255, 0.07), transparent);
+}
+.orch-canvas .node-card {
+  fill: rgba(20, 22, 38, 0.92);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.orch-canvas .node-card.center {
+  stroke: rgba(124, 107, 255, 0.5);
+}
+.orch-canvas .ring-ok {
+  fill: none;
+  stroke: var(--ok);
+  stroke-width: 2;
+  opacity: 0.5;
+}
+.orch-canvas .ring-warn {
+  fill: none;
+  stroke: var(--warn);
+  stroke-width: 2;
+  opacity: 0.6;
+}
+.orch-canvas .ring-crit {
+  fill: none;
+  stroke: var(--crit);
+  stroke-width: 2;
+  opacity: 0.6;
+}
+.orch-canvas .ring-idle {
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 1.5;
+  opacity: 0.3;
+}
+.orch-canvas .edge {
+  fill: none;
+  stroke: rgba(124, 107, 255, 0.28);
+  stroke-width: 1.5;
+}
+.orch-canvas .ntitle {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--text);
+}
+.orch-canvas .nsub {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  fill: var(--faint);
+}
+.orch-canvas .nicon {
+  fill: none;
+  stroke: var(--iris-2);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.orch-canvas .nicon-c {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.orch-canvas .flow {
+  fill: var(--cyan);
+  filter: drop-shadow(0 0 4px var(--cyan));
 }

@@ -1,65 +1,102 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useRef, useState } from "react";
+import { VitalsHero } from "@/components/dashboard/vitals-hero";
+import { OrchestrationShowcase } from "@/components/three/orchestration/orchestration-showcase";
+import { RobotAgent } from "@/components/dashboard/robot-agent";
+import { OperatorRobot } from "@/components/dashboard/operator-robot";
+import { DoNotPress } from "@/components/dashboard/do-not-press";
+import { SectionLabel } from "@/components/aurora/section-label";
+import { useInView } from "@/hooks/use-in-view";
+
+/*
+  Intro step machine — INFINITE LOOP, scroll-triggered, PAUSED while any robot is hovered:
+
+    0  robot-1 (health)      3.5 s
+    1  robot-2 (log)         3.5 s
+    2  robot-3 (backup)      3.5 s
+    3  operator left only    3.0 s
+    4  operator both         4.0 s
+    → restart (≈ 17.5 s total cycle)
+
+  Auto intro clouds are suppressed the moment anyHovered=true.
+*/
+
+export default function DashboardPage() {
+  const [introStep, setIntroStep] = useState(-1);
+  const [anyHovered, setAnyHovered] = useState(false);
+  const { ref: agentsSectionRef, inView: agentsInView } = useInView<HTMLDivElement>(0.2);
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Debounced hover tracking so moving between robots doesn't flicker the intro off */
+  function onZoneEnter() {
+    if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; }
+    setAnyHovered(true);
+  }
+  function onZoneLeave() {
+    leaveTimer.current = setTimeout(() => { setAnyHovered(false); leaveTimer.current = null; }, 150);
+  }
+
+  /* Infinite intro loop — starts on first scroll into view */
+  useEffect(() => {
+    if (!agentsInView) return;
+
+    let active = true;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    function startCycle() {
+      timers.forEach(clearTimeout);
+      timers.length = 0;
+      if (!active) return;
+
+      timers.push(setTimeout(() => { if (active) setIntroStep(0); },     0));
+      timers.push(setTimeout(() => { if (active) setIntroStep(1); },  3500));
+      timers.push(setTimeout(() => { if (active) setIntroStep(2); },  7000));
+      timers.push(setTimeout(() => { if (active) setIntroStep(3); }, 11000));
+      timers.push(setTimeout(() => { if (active) setIntroStep(4); }, 14000));
+      timers.push(setTimeout(() => { if (active) startCycle();    }, 17500));
+    }
+
+    startCycle();
+    return () => { active = false; timers.forEach(clearTimeout); };
+  }, [agentsInView]);
+
+  /* When any robot is hovered, suppress intro clouds — loop timer keeps running
+     but introActive props are all false, so no intro cloud appears. */
+  const step = anyHovered ? -1 : introStep;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="space-y-2">
+
+      <VitalsHero />
+
+      <SectionLabel>Live orchestration</SectionLabel>
+      <OrchestrationShowcase />
+
+      {/* All robots wrapped in ONE hover zone — cursor on any robot hides ALL intros */}
+      <div
+        ref={agentsSectionRef}
+        onMouseEnter={onZoneEnter}
+        onMouseLeave={onZoneLeave}
+      >
+        <SectionLabel className="mt-10">Specialist agents</SectionLabel>
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+          <RobotAgent agentKey="health" introActive={step === 0} />
+          <RobotAgent agentKey="log"    introActive={step === 1} />
+          <RobotAgent agentKey="backup" introActive={step === 2} />
+        </div>
+
+        {/* OperatorRobot inside the same hover zone */}
+        <OperatorRobot
+          leftActive={step === 3 || step === 4}
+          rightActive={step === 4}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      <div className="mt-20 border-t border-border/20">
+        <DoNotPress />
+      </div>
+
     </div>
   );
 }
