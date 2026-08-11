@@ -273,7 +273,7 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
   body(s,
     "You describe the problem the way you would to a colleague. It works out which checks to run, runs them on " +
     "the real machine, and tells you what it found in plain language — showing every step it took.",
-    { x: 0.62, y: 1.82, w: 11.9, h: 0.5, size: 14, color: C.white });
+    { x: 0.62, y: 1.82, w: 11.9, h: 0.62, size: 14, color: C.white });
 
   // The three beats sit above the picture as one line, so the screenshot owns the slide.
   [
@@ -284,11 +284,11 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
     const x = 0.62 + i * 4.02;
     s.addText(
       [{ text: t + " ", options: { bold: true, color: C.yellow } }, { text: d, options: { color: C.body } }],
-      { x, y: 2.46, w: 3.9, h: 0.34, margin: 0, fontFace: F.body, fontSize: 12 }
+      { x, y: 2.54, w: 3.9, h: 0.34, margin: 0, fontFace: F.body, fontSize: 12 }
     );
   });
 
-  figure(s, "console", { x: 1.37, y: 2.96, w: 10.6, label: "The console — talk on the left, watch on the right" });
+  figure(s, "console", { x: 1.37, y: 3.0, w: 10.6, label: "The console — talk left, watch right" });
 
   underHood(s, "Three ReAct agents on Groq (llama-3.3-70b, temperature 0). 33 Python tools reading the host directly.", { x: 0.62, y: 6.9 });
 
@@ -307,22 +307,22 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
   // The tiles already name each agent and what it does, so repeating that in cards below would
   // be the same information twice. What the picture cannot say is the safety point — so that
   // gets the space instead.
-  const figH = figure(s, "fleetgrid", { x: 0.62, y: 2.56, w: 11.9, label: "The live fleet" });
+  const figH = figure(s, "fleetgrid", { x: 1.47, y: 2.56, w: 10.4, label: "The live fleet" });
 
-  const y = 2.56 + figH + 0.16;
+  const y = 2.56 + figH + 0.26;
   [
-    ["Looks only", "System Health and Log Analyzer", "can read everything and change nothing"],
-    ["Can act", "Backup & DR", "the only one able to alter anything — and only backups"],
+    ["Looks only", "System Health and Log Analyzer", "read everything, change nothing"],
+    ["Can act", "Backup & DR", "the only one that can change anything"],
   ].forEach(([tag, who, what], i) => {
     const x = 0.62 + i * 6.06;
-    card(s, { x, y, w: 5.84, h: 0.92, accent: i === 1 });
+    card(s, { x, y, w: 5.84, h: 0.98, accent: i === 1 });
     s.addText(tag.toUpperCase(), {
       x: x + 0.32, y: y + 0.18, w: 2.4, h: 0.24, margin: 0,
       fontFace: F.body, fontSize: 9.5, bold: true, color: i === 1 ? C.yellow : C.muted, charSpacing: 1.5,
     });
     s.addText(
       [{ text: who + " — ", options: { bold: true, color: C.white } }, { text: what, options: { color: C.body } }],
-      { x: x + 0.32, y: y + 0.44, w: 5.2, h: 0.4, margin: 0, fontFace: F.body, fontSize: 11, lineSpacing: 15 }
+      { x: x + 0.32, y: y + 0.44, w: 5.2, h: 0.46, margin: 0, fontFace: F.body, fontSize: 11, lineSpacing: 15 }
     );
   });
 
@@ -587,7 +587,7 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
     x: 7.02, y: 5.34, w: 5.2, h: 0.5, margin: 0, fontFace: F.head, fontSize: 26, bold: true, color: C.yellow,
   });
   body(s, "No cluster, no monitoring platform, no data pipeline. That is the difference between a product for a hundred companies and one for a hundred thousand.",
-    { x: 7.02, y: 5.9, w: 5.2, h: 0.7, size: 11.5 });
+    { x: 7.02, y: 5.9, w: 5.2, h: 0.8, size: 11.5 });
 
   s.addNotes("Names to know: Resolve.ai reached unicorn valuation in under two years. Cleric is deliberately read-only. Traversal's 90% accuracy claim is self-reported, with no independent benchmark.");
 }
