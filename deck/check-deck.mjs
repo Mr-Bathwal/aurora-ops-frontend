@@ -21,7 +21,9 @@ const EMU = 914400;
 const W = 13.333, H = 7.5;
 const PAD = 0.02;          // tolerance, in inches
 
-const zip = new AdmZip(resolve(HERE, "Aurora-Ops-Overview.pptx"));
+const FILE = process.argv[2] ?? "Aurora-Ops-Overview.pptx";
+const zip = new AdmZip(resolve(HERE, FILE));
+console.log(`checking ${FILE}\n`);
 const slides = zip
   .getEntries()
   .filter((e) => /^ppt\/slides\/slide\d+\.xml$/.test(e.entryName))

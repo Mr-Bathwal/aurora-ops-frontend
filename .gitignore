@@ -54,3 +54,6 @@ next-env.d.ts
 
 # Machine-local Claude Code settings. launch.json IS tracked — it is shared config.
 /.claude/settings.local.json
+
+# PowerPoint lock files, created while a deck is open
+~$*
