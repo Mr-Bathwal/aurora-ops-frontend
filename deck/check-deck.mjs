@@ -29,11 +29,23 @@ const slides = zip
   .filter((e) => /^ppt\/slides\/slide\d+\.xml$/.test(e.entryName))
   .sort((a, b) => Number(a.entryName.match(/\d+/)[0]) - Number(b.entryName.match(/\d+/)[0]));
 
-let offSlide = 0, collisions = 0;
+let offSlide = 0, collisions = 0, negatives = 0;
 
 for (const [i, entry] of slides.entries()) {
   const xml = zip.readAsText(entry);
   const boxes = [];
+
+  /* Negative extents. pptxgenjs will happily write a negative cx/cy if a shape is given a
+     negative width or height — an upward arrow drawn as h: -1.54, say. A zip reader parses
+     the result without complaint and PowerPoint then refuses to open the file at all, with
+     no indication of which shape is at fault. The per-shape regexes below cannot catch it,
+     because they only match digits, so the offending shape is skipped silently. */
+  for (const m of xml.matchAll(/<a:ext cx="(-?\d+)" cy="(-?\d+)"\/>/g)) {
+    if (+m[1] < 0 || +m[2] < 0) {
+      negatives++;
+      console.log(`  slide ${String(i + 1).padStart(2)} NEGATIVE EXTENT  cx=${m[1]} cy=${m[2]}  — PowerPoint will refuse to open this file`);
+    }
+  }
 
   // Each <p:sp> is one shape. Take its transform and whether it carries any text.
   for (const sp of xml.split("<p:sp>").slice(1)) {
@@ -98,6 +110,6 @@ for (const [i, entry] of slides.entries()) {
 }
 
 console.log(
-  `\n${slides.length} slides · ${offSlide} off-slide · ${collisions} text collisions` +
-  `${offSlide + collisions === 0 ? "  — clean" : ""}`
+  `\n${slides.length} slides · ${offSlide} off-slide · ${collisions} text collisions · ${negatives} negative extents` +
+  `${offSlide + collisions + negatives === 0 ? "  — clean" : ""}`
 );

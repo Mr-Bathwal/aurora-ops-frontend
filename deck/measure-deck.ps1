@@ -17,14 +17,20 @@ $app = New-Object -ComObject PowerPoint.Application
 $openBefore = $app.Presentations.Count
 $pres = $app.Presentations.Open($path, -1, 0, 0)
 
+# A checker that reports "clean" because it measured nothing is worse than no checker at all.
+# If the deck did not open, say so and exit non-zero rather than falling through the loop.
+if ($null -eq $pres) { Write-Error "Could not open $path - nothing was measured."; exit 2 }
+
 $slideH = $pres.PageSetup.SlideHeight   # points
 $problems = 0
+$measured = 0
 
 foreach ($slide in $pres.Slides) {
   foreach ($shape in $slide.Shapes) {
     if (-not $shape.HasTextFrame) { continue }
     if ($shape.TextFrame.HasText -eq 0) { continue }
 
+    $measured++
     $tr   = $shape.TextFrame.TextRange
     $need = $tr.BoundHeight
     $have = $shape.Height
@@ -46,4 +52,6 @@ $pres.Close()
 if ($openBefore -eq 0 -and $app.Presentations.Count -eq 0) { $app.Quit() }
 [System.Runtime.InteropServices.Marshal]::ReleaseComObject($app) | Out-Null
 
-if ($problems -eq 0) { "`nlaid-out text: clean" } else { "`n{0} laid-out text problems" -f $problems }
+if ($measured -eq 0) { Write-Error "No text was measured - the deck opened but appears empty."; exit 2 }
+if ($problems -eq 0) { "`nlaid-out text: clean  ({0} text shapes measured)" -f $measured }
+else { "`n{0} laid-out text problems across {1} text shapes" -f $problems, $measured }
