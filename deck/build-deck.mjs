@@ -343,7 +343,53 @@ function shot(s, name, { x, y, w, h, label }) {
   s.addNotes("If asked whether this is really agentic: nothing in the code says high memory should trigger a process check. The model chose that from what it had just read.");
 }
 
-/* ══════════════════════════ 06 — FEATURES ══════════════════════════ */
+/* ══════════════════════════ 06 — BETWEEN THE AGENTS ══════════════════════════ */
+{
+  const s = slide("Between the agents", "Inside, it decides. Between, we decide.");
+  lede(s, "The loop on the last slide has no fixed length. The route between agents does — we drew it, and it runs the same way every time.", { w: 11.4 });
+
+  /* Left — picking one specialist. Drawn as a spine rather than three diagonals: diagonal
+     connectors at this size read as noise, and a spine makes the fan-out obvious. */
+  card(s, { x: 0.62, y: 2.5, w: 5.86, h: 3.9 });
+  s.addText("PICKING ONE SPECIALIST", {
+    x: 0.96, y: 2.78, w: 5, h: 0.26, margin: 0,
+    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
+  });
+  node(s, { x: 1.0, y: 3.99, w: 1.9, h: 1.1, title: "Router", sub: "reads your words", on: true });
+  s.addShape(pres.ShapeType.line, { x: 2.9, y: 4.54, w: 0.45, h: 0, line: { color: C.yellow, width: 1.5 } });
+  s.addShape(pres.ShapeType.line, { x: 3.35, y: 3.58, w: 0, h: 1.92, line: { color: C.yellow, width: 1.5 } });
+  ["System Health", "Log Analyzer", "Backup & DR"].forEach((t, i) => {
+    const cy = 3.58 + i * 0.96;
+    arrow(s, { x: 3.35, y: cy, w: 0.5, color: C.yellow });
+    node(s, { x: 3.85, y: cy - 0.38, w: 2.25, h: 0.76, title: t });
+  });
+
+  /* Right — the chain, with its one branch. */
+  card(s, { x: 6.86, y: 2.5, w: 5.86, h: 3.9, accent: true });
+  s.addText("DIAGNOSE, DECIDE, ACT, VERIFY", {
+    x: 7.2, y: 2.78, w: 5, h: 0.26, margin: 0,
+    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4,
+  });
+  const rows = [
+    ["Read the evidence", "the log reader writes a diagnosis", 7.3, 5.0, false],
+    ["Does it need a fix?", "one decision, one word", 7.3, 5.0, true],
+  ];
+  rows.forEach(([t, sub, x, w, on], i) => {
+    node(s, { x, y: 3.2 + i * 0.86, w, h: 0.62, title: t, on });
+    s.addShape(pres.ShapeType.line, { x: 9.8, y: 3.82 + i * 0.86, w: 0, h: 0.24, line: { color: C.muted, width: 1.4, endArrowType: "triangle" } });
+  });
+  node(s, { x: 7.3, y: 4.92, w: 2.38, h: 0.62, title: "Take the fix" });
+  s.addText("or skip it entirely", {
+    x: 9.94, y: 5.04, w: 2.38, h: 0.38, margin: 0,
+    fontFace: F.mono, fontSize: 10.5, color: C.dim,
+  });
+  s.addShape(pres.ShapeType.line, { x: 9.8, y: 5.54, w: 0, h: 0.24, line: { color: C.muted, width: 1.4, endArrowType: "triangle" } });
+  node(s, { x: 7.3, y: 5.78, w: 5.0, h: 0.62, title: "Check it actually worked", on: true });
+
+  s.addNotes("Left: you do not need to know which specialist owns your problem. Right: the fix is skipped entirely when the diagnosis does not call for it — and the last step exists to check the work rather than assume it.");
+}
+
+/* ══════════════════════════ 07 — FEATURES ══════════════════════════ */
 {
   const s = slide("Features", "What it does");
 
@@ -370,7 +416,62 @@ function shot(s, name, { x, y, w, h, label }) {
   });
 }
 
-/* ══════════════════════════ 07 — APPLICATION SNAPSHOTS ══════════════════════════ */
+/* ══════════════════════════ 08 — HOW IT REACHES MACHINES ══════════════════════════ */
+{
+  const s = slide("Reaching your machines", "They call us. We never call them.");
+  lede(s, "A firewall blocks strangers coming in and allows staff going out. So the machine does the calling — which is why this works on any network without asking anyone's permission.", { w: 11.4 });
+
+  card(s, { x: 0.62, y: 2.66, w: 4.3, h: 2.72 });
+  s.addText("OUR SERVER", {
+    x: 0.96, y: 2.94, w: 3.6, h: 0.26, margin: 0,
+    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
+  });
+  s.addText("Pins a job to a list,\nthen waits.\n\nNever leaves the building.", {
+    x: 0.96, y: 3.36, w: 3.6, h: 1.6, margin: 0,
+    fontFace: F.body, fontSize: 12.5, color: C.grey, lineSpacing: 18,
+  });
+
+  card(s, { x: 8.42, y: 2.66, w: 4.3, h: 2.72, accent: true });
+  s.addText("THEIR MACHINE", {
+    x: 8.76, y: 2.94, w: 3.6, h: 0.26, margin: 0,
+    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4,
+  });
+  s.addText("A small program asks\nevery 3 seconds.\n\nDoes the work locally.", {
+    x: 8.76, y: 3.36, w: 3.6, h: 1.6, margin: 0,
+    fontFace: F.body, fontSize: 12.5, color: C.grey, lineSpacing: 18,
+  });
+
+  /* Every arrow points the same way. That is the whole slide. */
+  const hops = [
+    ["Enrol — once, with a one-time pass", 3.12],
+    ["Anything for me? — every 3 seconds", 3.86],
+    ["Here is the answer", 4.6],
+  ];
+  hops.forEach(([label, y]) => {
+    s.addShape(pres.ShapeType.line, {
+      x: 5.08, y, w: 3.26, h: 0,
+      line: { color: C.yellow, width: 1.6, beginArrowType: "triangle" },
+    });
+    s.addText(label, {
+      x: 5.08, y: y - 0.34, w: 3.26, h: 0.28, margin: 0,
+      fontFace: F.mono, fontSize: 9.5, color: C.yellow, align: "center",
+    });
+  });
+
+  s.addShape(pres.ShapeType.line, { x: 5.6, y: 5.72, w: 2.2, h: 0, line: { color: C.line, width: 1.4, dashType: "dash" } });
+  s.addText("✕", {
+    x: 6.44, y: 5.5, w: 0.5, h: 0.4, margin: 0,
+    fontFace: F.head, fontSize: 17, bold: true, color: C.dim, align: "center",
+  });
+  s.addText("No connection ever runs this way — nothing inbound is opened on their network.", {
+    x: 0.62, y: 6.1, w: 11.9, h: 0.32, margin: 0,
+    fontFace: F.body, fontSize: 12.5, color: C.grey, align: "center",
+  });
+
+  s.addNotes("This is the slide that answers 'how would you ever get into a customer's network?'. You do not. They come to you, and that is why no firewall change is needed.");
+}
+
+/* ══════════════════════════ 09 — APPLICATION SNAPSHOTS ══════════════════════════ */
 {
   const s = slide("Application snapshots", "The running product");
 
