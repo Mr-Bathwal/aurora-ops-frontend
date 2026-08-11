@@ -673,27 +673,40 @@ function shot(s, name, { x, y, w, h, label }) {
     "Widen safe action beyond backup and recovery",
   ];
 
+  // The roadmap, compressed to the top half so the thesis below it is what the slide is
+  // actually about. This is the slide that stays on screen through every question.
   [["Working today", now, true], ["Next", next, false]].forEach(([title, items, on], ci) => {
     const x = 0.62 + ci * 6.15;
-    card(s, { x, y: 2.1, w: 5.83, h: 3.3, accent: on });
+    card(s, { x, y: 1.94, w: 5.83, h: 2.56, accent: on });
     s.addText(title.toUpperCase(), {
-      x: x + 0.36, y: 2.4, w: 4.9, h: 0.28, margin: 0,
+      x: x + 0.36, y: 2.2, w: 4.9, h: 0.28, margin: 0,
       fontFace: F.mono, fontSize: 10.5, bold: true, color: on ? C.yellow : C.muted, charSpacing: 1.8,
     });
     items.forEach((t, i) => {
-      const y = 2.9 + i * 0.72;
-      s.addShape(pres.ShapeType.rect, { x: x + 0.36, y: y + 0.13, w: 0.16, h: 0.03, fill: { color: on ? C.yellow : C.line }, line: { width: 0 } });
+      const y = 2.72 + i * 0.56;
+      s.addShape(pres.ShapeType.rect, { x: x + 0.36, y: y + 0.11, w: 0.16, h: 0.03, fill: { color: on ? C.yellow : C.line }, line: { width: 0 } });
       s.addText(t, {
-        x: x + 0.68, y, w: 4.85, h: 0.56, margin: 0,
-        fontFace: F.body, fontSize: 12.5, color: on ? C.white : C.grey, lineSpacing: 17,
+        x: x + 0.68, y, w: 4.85, h: 0.44, margin: 0,
+        fontFace: F.body, fontSize: 12.5, color: on ? C.white : C.grey, lineSpacing: 16,
       });
     });
   });
 
-  beam(s, { x: 0.62, y: 5.88, w: 4.0, scale: 0.9 });
+  // The close, and a deliberate bookend: slide 02 is titled "Detection is solved. Judgement is
+  // not." This answers that exact sentence. The thesis, not a roadmap or a URL, is the last
+  // thing on the screen while questions are taken.
+  beam(s, { x: 0.62, y: 5.06, w: 2.9, scale: 0.85 });
+  s.addText("Detection was solved thirty years ago.", {
+    x: 0.6, y: 5.34, w: 12, h: 0.5, margin: 0,
+    fontFace: F.head, fontSize: 22, color: C.grey,
+  });
+  s.addText("We automated the judgement.", {
+    x: 0.6, y: 5.88, w: 12, h: 0.56, margin: 0,
+    fontFace: F.head, fontSize: 28, bold: true, color: C.yellow,
+  });
   s.addText("github.com/Mr-Bathwal/aurora-ops-frontend   ·   github.com/Mr-Bathwal/aurora-ops-hub", {
-    x: 0.62, y: 6.3, w: 11.9, h: 0.32, margin: 0,
-    fontFace: F.mono, fontSize: 11, color: C.muted,
+    x: 0.62, y: 6.72, w: 11.9, h: 0.3, margin: 0,
+    fontFace: F.mono, fontSize: 10.5, color: C.muted,
   });
 }
 
