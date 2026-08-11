@@ -1,10 +1,16 @@
-/** Builds the Aurora Ops overview deck.
+/** Builds the Aurora Ops overview deck, in EY's visual language.
  *
- * Dark throughout, in the product's own palette — a deck about a console that is near-black
- * with mint and blue accents should not arrive as white slides with stock blue.
+ * EY's identity is two things doing all the work: a charcoal ground (#2E2E38) and a single
+ * saturated yellow (#FFE600) spent sparingly. Everything else is white and grey. The deck
+ * follows that discipline — yellow marks exactly one thing per slide and never decorates.
  *
- * Motif: rounded panel cards on the page floor, mint for the live/primary signal and blue for
- * structure. Repeated on every slide. No accent stripes, no rules under titles.
+ * Typeface is Arial, which is EY's own sanctioned fallback for EY Interstate. A brand font we
+ * do not have would silently fall back anyway; choosing the fallback deliberately means the
+ * deck looks the same on every machine it opens on.
+ *
+ * Structure follows the argument, not the product tour: the problem, why it got worse, what we
+ * built, how it works, how it reaches machines, how it is secured, who else is in the market,
+ * where we win and lose, what comes next.
  */
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
@@ -15,370 +21,595 @@ const require = createRequire(import.meta.url);
 const pptxgen = require("pptxgenjs");
 const HERE = dirname(fileURLToPath(import.meta.url));
 
+/* EY palette. Yellow is the only saturated colour in the deck — everything else is the
+   charcoal/grey ramp, which is what keeps the yellow meaning something. */
 const C = {
-  bg: "05070A",
-  panel: "0E141C",
-  panel2: "121A24",
-  line: "223040",
-  mint: "34F5C5",
-  blue: "3E9CFF",
-  text: "E9EFF6",
-  body: "A9B7C6",
-  muted: "76869A",
-  warn: "FFC56B",
-  crit: "FF6B81",
+  yellow:   "FFE600",
+  charcoal: "2E2E38",
+  charcoal2:"3C3C48",
+  white:    "FFFFFF",
+  surface:  "F6F6F8",
+  line:     "E1E1E6",
+  lineDark: "4A4A57",
+  grey:     "747480",
+  greyLite: "C4C4CD",
+  ink:      "2E2E38",
+  // Used only where a table must encode good/bad. Desaturated to sit inside the EY ramp.
+  good:     "168736",
+  bad:      "B12A2A",
 };
 
-const F = { head: "Calibri", body: "Calibri" };
+const F = { head: "Arial", body: "Arial" };
 const img = (n) => ({ data: "image/png;base64," + readFileSync(resolve(HERE, "img", n + ".png")).toString("base64") });
 
 const pres = new pptxgen();
-pres.layout = "LAYOUT_WIDE"; // 13.3 x 7.5
-pres.author = "Aurora Ops";
+pres.layout = "LAYOUT_WIDE"; // 13.33 x 7.5
+pres.author = "Gourav Kumar Bathwal";
+pres.company = "Aurora Ops";
 pres.title = "Aurora Ops — Agentic IT Operations";
 
-/** Every slide opens the same way: floor colour, a small mint eyebrow, a large title. */
+/* ── Slide furniture ────────────────────────────────────────────────────────────────────── */
+
+/** Light slide: white ground, charcoal type, a short yellow rule above the eyebrow.
+ *  The rule is the only yellow most slides get. */
 function slide(eyebrow, title, opts = {}) {
   const s = pres.addSlide();
-  s.background = { color: C.bg };
+  s.background = { color: C.white };
+  s.addShape(pres.ShapeType.rect, {
+    x: 0.62, y: 0.44, w: 0.46, h: 0.09, fill: { color: C.yellow }, line: { width: 0 },
+  });
   s.addText(eyebrow.toUpperCase(), {
-    x: 0.62, y: 0.46, w: 8, h: 0.26, margin: 0,
-    fontFace: F.body, fontSize: 11, bold: true, color: C.mint, charSpacing: 2.4,
+    x: 0.62, y: 0.62, w: 9, h: 0.26, margin: 0,
+    fontFace: F.body, fontSize: 10.5, bold: true, color: C.grey, charSpacing: 2.2,
   });
   s.addText(title, {
-    x: 0.6, y: 0.72, w: opts.titleW ?? 11.4, h: opts.titleH ?? 0.72, margin: 0,
-    fontFace: F.head, fontSize: opts.titleSize ?? 34, bold: true, color: C.text,
+    x: 0.6, y: 0.92, w: opts.titleW ?? 11.6, h: opts.titleH ?? 0.78, margin: 0,
+    fontFace: F.head, fontSize: opts.titleSize ?? 31, bold: true, color: C.ink,
   });
   return s;
 }
 
-/** The repeated card. Subtle tint + hairline, never an edge stripe. */
-function card(s, { x, y, w, h, fill = C.panel, line = C.line }) {
-  s.addShape(pres.ShapeType.roundRect, {
-    x, y, w, h, rectRadius: 0.12,
-    fill: { color: fill }, line: { color: line, width: 1 },
+/** Dark slide, for the moments that should land harder. */
+function slideDark(eyebrow, title, opts = {}) {
+  const s = pres.addSlide();
+  s.background = { color: C.charcoal };
+  s.addShape(pres.ShapeType.rect, {
+    x: 0.62, y: 0.44, w: 0.46, h: 0.09, fill: { color: C.yellow }, line: { width: 0 },
+  });
+  s.addText(eyebrow.toUpperCase(), {
+    x: 0.62, y: 0.62, w: 9, h: 0.26, margin: 0,
+    fontFace: F.body, fontSize: 10.5, bold: true, color: C.yellow, charSpacing: 2.2,
+  });
+  s.addText(title, {
+    x: 0.6, y: 0.92, w: opts.titleW ?? 11.6, h: opts.titleH ?? 0.78, margin: 0,
+    fontFace: F.head, fontSize: opts.titleSize ?? 31, bold: true, color: C.white,
+  });
+  return s;
+}
+
+function card(s, { x, y, w, h, dark = false }) {
+  s.addShape(pres.ShapeType.rect, {
+    x, y, w, h,
+    fill: { color: dark ? C.charcoal2 : C.surface },
+    line: { color: dark ? C.lineDark : C.line, width: 1 },
   });
 }
 
-/* ══════════════ 1 — PROBLEM STATEMENT ══════════════ */
+function body(s, text, { x, y, w, h = 0.9, size = 13.5, color = C.grey, dark = false }) {
+  s.addText(text, {
+    x, y, w, h, margin: 0,
+    fontFace: F.body, fontSize: size, color: dark ? C.greyLite : color, lineSpacing: size * 1.5,
+  });
+}
+
+function h3(s, text, { x, y, w = 4, size = 15, dark = false }) {
+  s.addText(text, {
+    x, y, w, h: 0.3, margin: 0,
+    fontFace: F.head, fontSize: size, bold: true, color: dark ? C.white : C.ink,
+  });
+}
+
+/** A number the room should remember. Yellow only on dark grounds, charcoal on light. */
+function stat(s, value, label, { x, y, w = 2.6, dark = false, accent = false }) {
+  s.addText(value, {
+    x, y, w, h: 0.62, margin: 0,
+    fontFace: F.head, fontSize: 34, bold: true,
+    color: accent ? C.yellow : dark ? C.white : C.ink,
+  });
+  s.addText(label, {
+    x, y: y + 0.62, w, h: 0.5, margin: 0,
+    fontFace: F.body, fontSize: 11, color: dark ? C.greyLite : C.grey, lineSpacing: 14,
+  });
+}
+
+/** Table defaults — hairline rules, charcoal header, generous padding. */
+function table(s, rows, { x, y, w, colW, dark = false, fontSize = 11.5 }) {
+  s.addTable(rows, {
+    x, y, w, colW,
+    fontFace: F.body, fontSize,
+    color: dark ? C.greyLite : C.grey,
+    border: { type: "solid", color: dark ? C.lineDark : C.line, pt: 1 },
+    fill: { color: dark ? C.charcoal : C.white },
+    margin: [7, 10, 7, 10],
+    valign: "top",
+  });
+}
+
+const hdr = (t) => ({ text: t, options: { bold: true, color: C.white, fill: { color: C.charcoal }, fontSize: 10.5, charSpacing: 1 } });
+
+/* ══════════════════ 1 — TITLE ══════════════════ */
 {
-  const s = slide("Problem statement", "Monitoring solved detection.\nNobody automated the judgement.", {
-    titleH: 1.24, titleSize: 32,
+  const s = pres.addSlide();
+  s.background = { color: C.charcoal };
+
+  // The EY beam, as a motif rather than a logo: a yellow parallelogram cutting the corner.
+  s.addShape(pres.ShapeType.rect, {
+    x: 10.2, y: -1.4, w: 1.5, h: 6.2, fill: { color: C.yellow }, line: { width: 0 }, rotate: 28,
+  });
+  s.addShape(pres.ShapeType.rect, {
+    x: 11.9, y: -0.6, w: 0.42, h: 6.2, fill: { color: C.yellow }, line: { width: 0 }, rotate: 28,
   });
 
+  s.addText("AURORA OPS", {
+    x: 0.75, y: 2.35, w: 8, h: 0.34, margin: 0,
+    fontFace: F.body, fontSize: 13, bold: true, color: C.yellow, charSpacing: 4,
+  });
+  s.addText("Agentic IT operations", {
+    x: 0.72, y: 2.82, w: 9.2, h: 1.0, margin: 0,
+    fontFace: F.head, fontSize: 46, bold: true, color: C.white,
+  });
   s.addText(
-    "Alerting told us something broke twenty years ago. Scripting runs fixed steps. The reasoning " +
-    "in between — read the evidence, work out what it means, decide what to do — is still a person, " +
-    "at 2am, every single time.",
-    { x: 0.6, y: 2.02, w: 6.35, h: 1.1, margin: 0, fontFace: F.body, fontSize: 14.5, color: C.body, lineSpacing: 22 }
+    "Detection was solved twenty years ago. The judgement that follows it — read the evidence, " +
+    "decide what it means, act, then check the action worked — is still a person at 3am.",
+    { x: 0.75, y: 3.98, w: 8.5, h: 0.9, margin: 0, fontFace: F.body, fontSize: 14.5, color: C.greyLite, lineSpacing: 22 }
   );
 
-  // The scenario, as the slide's one loud object.
-  card(s, { x: 7.35, y: 1.86, w: 5.35, h: 2.5, fill: C.panel2 });
-  s.addText("A REAL INCIDENT", {
-    x: 7.7, y: 2.08, w: 4.6, h: 0.24, margin: 0,
-    fontFace: F.body, fontSize: 10, bold: true, color: C.mint, charSpacing: 2,
+  s.addShape(pres.ShapeType.rect, { x: 0.75, y: 5.3, w: 3.4, h: 0.035, fill: { color: C.yellow }, line: { width: 0 } });
+  s.addText("Gourav Kumar Bathwal", {
+    x: 0.75, y: 5.5, w: 6, h: 0.3, margin: 0, fontFace: F.body, fontSize: 13, bold: true, color: C.white,
   });
-  s.addText(
-    "02:14 — “disk 91% on prod-db-04”. Engineer wakes, connects, runs df, finds /var full, checks " +
-    "what is growing, finds log rotation failed, checks last night’s backup, fixes, verifies.",
-    { x: 7.7, y: 2.42, w: 4.65, h: 1.0, margin: 0, fontFace: F.body, fontSize: 12.5, color: C.body, lineSpacing: 17 }
-  );
-  s.addText("35 min", {
-    x: 7.7, y: 3.42, w: 1.9, h: 0.62, margin: 0,
-    fontFace: F.head, fontSize: 34, bold: true, color: C.mint,
-  });
-  s.addText("≈30 of them identical\nto the last time", {
-    x: 9.6, y: 3.5, w: 2.8, h: 0.6, margin: 0,
-    fontFace: F.body, fontSize: 11.5, color: C.muted, lineSpacing: 15,
-  });
-
-  const costs = [
-    ["It does not scale", "Every new server multiplies the same manual checking. Headcount is the only lever anyone has."],
-    ["It is knowledge-gated", "The senior engineer knows which six things to check. The junior does not, so the ticket escalates."],
-    ["Tools stop one step short", "Datadog says CPU is 94%. It cannot say which process, why, or whether it matters."],
-  ];
-  costs.forEach(([h, b], i) => {
-    const x = 0.6 + i * 4.15;
-    card(s, { x, y: 4.72, w: 3.85, h: 2.1 });
-    s.addShape(pres.ShapeType.ellipse, {
-      x: x + 0.32, y: 5.0, w: 0.26, h: 0.26, fill: { color: i === 2 ? C.blue : C.mint }, line: { color: C.bg, width: 0 },
-    });
-    s.addText(h, {
-      x: x + 0.72, y: 4.96, w: 3.0, h: 0.32, margin: 0,
-      fontFace: F.head, fontSize: 15, bold: true, color: C.text,
-    });
-    s.addText(b, {
-      x: x + 0.32, y: 5.44, w: 3.25, h: 1.3, margin: 0,
-      fontFace: F.body, fontSize: 12, color: C.body, lineSpacing: 16.5,
-    });
+  s.addText("FastAPI · LangGraph · LangChain · Groq · Next.js 16", {
+    x: 0.75, y: 5.82, w: 7, h: 0.3, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey,
   });
 
   s.addNotes(
-    "Open here. The point is not 'IT is manual and slow' — every deck says that and a bash script fixes it. " +
-    "The point is that the judgement step was never automated, which is exactly what an agent can do and a script cannot."
+    "One sentence to open with: monitoring tells you something is wrong, and that has been solved for thirty " +
+    "years. Everything after the alarm is still manual. That gap is the whole product."
   );
 }
 
-/* ══════════════ 2 — SOLUTION OVERVIEW ══════════════ */
+/* ══════════════════ 2 — THE PROBLEM ══════════════════ */
 {
-  const s = slide("Solution overview", "A reasoning layer between machine and operator", { titleSize: 32, titleH: 0.8 });
+  const s = slide("The problem", "Three problems get called one problem", { titleSize: 31 });
+
+  body(s,
+    "An alarm fires at 03:00. Someone wakes, logs in, types commands, forms a theory, tests it, fixes it, " +
+    "checks the fix held, goes back to bed. Waking them has been automated since the 1990s. Everything after " +
+    "that is still a person typing.",
+    { x: 0.62, y: 1.92, w: 11.9, h: 0.85, size: 14 });
+
+  table(s, [
+    [hdr(""), hdr("The question it answers"), hdr("State of the world")],
+    [{ text: "Detection", options: { bold: true, color: C.ink } },
+     "“Is something wrong?”",
+     { text: "Solved for thirty years. Commoditised.", options: { color: C.grey } }],
+    [{ text: "Diagnosis", options: { bold: true, color: C.ink } },
+     "“Why is it wrong?”",
+     { text: "Expensive, manual. The current battleground.", options: { color: C.ink, bold: true } }],
+    [{ text: "Remediation", options: { bold: true, color: C.ink } },
+     "“Make it not wrong.”",
+     { text: "Rare. Mostly still human.", options: { color: C.ink, bold: true } }],
+  ], { x: 0.62, y: 3.0, w: 11.9, colW: [2.2, 4.2, 5.5] });
+
+  card(s, { x: 0.62, y: 5.15, w: 11.9, h: 1.62 });
+  s.addShape(pres.ShapeType.rect, { x: 0.62, y: 5.15, w: 0.07, h: 1.62, fill: { color: C.yellow }, line: { width: 0 } });
+  h3(s, "Aurora Ops attacks rows two and three", { x: 0.95, y: 5.42, w: 8 });
+  body(s,
+    "This matters for positioning as much as for engineering. Presented as monitoring, it competes with Datadog " +
+    "and loses. Presented as what happens after the alarm, it enters a market that is barely two years old.",
+    { x: 0.95, y: 5.8, w: 11.2, h: 0.8, size: 12.5 });
+
+  s.addNotes(
+    "Do not let the room collapse these three into 'IT is slow'. The distinction is the pitch: detection is a " +
+    "commodity, judgement is not, and judgement is exactly what an agent can do that a script cannot."
+  );
+}
+
+/* ══════════════════ 3 — WHY IT GOT WORSE ══════════════════ */
+{
+  const s = slideDark("Why now", "More monitoring made it worse, not better", { titleSize: 31 });
+
+  body(s,
+    "The industry's answer to “we cannot see what is happening” was more instrumentation. It worked, and then " +
+    "it overshot. The bottleneck moved from information to attention.",
+    { x: 0.62, y: 1.9, w: 8.4, h: 0.8, size: 14, dark: true });
+
+  stat(s, "44%", "of organisations had an outage in the past year\ncaused by an alert that was ignored or muted", { x: 0.62, y: 3.0, w: 3.7, dark: true, accent: true });
+  stat(s, "10,000+", "alerts a day reaching the average\noperations team", { x: 4.7, y: 3.0, w: 3.7, dark: true });
+  stat(s, "<5%", "of those alerts actually require\na human being", { x: 8.8, y: 3.0, w: 3.7, dark: true });
+
+  card(s, { x: 0.62, y: 4.72, w: 11.9, h: 1.62, dark: true });
+  s.addShape(pres.ShapeType.rect, { x: 0.62, y: 4.72, w: 0.07, h: 1.62, fill: { color: C.yellow }, line: { width: 0 } });
+  h3(s, "Read the first number again", { x: 0.95, y: 5.0, w: 8, dark: true });
+  body(s,
+    "The outage was not caused by missing information. It was caused by too much of it. Someone had already been " +
+    "told, and had learned to stop listening. Adding another dashboard makes that worse.",
+    { x: 0.95, y: 5.38, w: 11.2, h: 0.8, size: 12.5, dark: true });
+
+  s.addText("Source: 2026 State of Production Reliability report, n = 1,039 practitioners", {
+    x: 0.62, y: 6.62, w: 9, h: 0.24, margin: 0, fontFace: F.body, fontSize: 9.5, color: C.grey,
+  });
+
+  s.addNotes("This is the strongest slide in the deck. Pause on 44%.");
+}
+
+/* ══════════════════ 4 — WHAT WE BUILT ══════════════════ */
+{
+  const s = slide("The solution", "Three specialists, a router, and a chain that checks itself");
+
+  body(s,
+    "Agents with real tools on real machines. They choose which tools to call, hand work along a fixed route, " +
+    "and report in plain language — with every tool call shown.",
+    { x: 0.62, y: 1.86, w: 11.9, h: 0.6, size: 14 });
+
+  const agents = [
+    ["System Health", "18 tools", "CPU, memory, disk, swap, network, processes, services, ports, and a fixed 13-command diagnostic menu", "Read-only"],
+    ["Log Analyzer", "7 tools", "Read, tail, count error levels, search patterns, establish the time range covered", "Read-only"],
+    ["Backup & DR", "8 tools", "Create, verify integrity, restore, clean up, report disaster-recovery posture", "Acts"],
+  ];
+  agents.forEach(([name, count, desc, mode], i) => {
+    const x = 0.62 + i * 4.02;
+    card(s, { x, y: 2.6, w: 3.72, h: 2.12 });
+    s.addShape(pres.ShapeType.rect, { x, y: 2.6, w: 3.72, h: 0.06, fill: { color: mode === "Acts" ? C.yellow : C.greyLite }, line: { width: 0 } });
+    h3(s, name, { x: x + 0.28, y: 2.86, w: 2.28, size: 14.5 });
+    s.addText(count, { x: x + 2.6, y: 2.88, w: 0.9, h: 0.26, margin: 0, fontFace: F.body, fontSize: 10.5, bold: true, color: C.grey, align: "right" });
+    body(s, desc, { x: x + 0.28, y: 3.28, w: 3.2, h: 1.0, size: 11.5 });
+    s.addText(mode, {
+      x: x + 0.28, y: 4.3, w: 2, h: 0.26, margin: 0,
+      fontFace: F.body, fontSize: 10, bold: true, color: mode === "Acts" ? C.ink : C.grey, charSpacing: 1.4,
+    });
+  });
+
+  card(s, { x: 0.62, y: 5.0, w: 5.85, h: 1.78 });
+  h3(s, "Orchestrator", { x: 0.9, y: 5.24, w: 4 });
+  body(s, "You describe a symptom, not an agent. One LLM call reads the request and routes it to whichever specialist owns it — or answers “no match” rather than forcing a wrong one.",
+    { x: 0.9, y: 5.6, w: 5.3, h: 1.0, size: 11.5 });
+
+  card(s, { x: 6.67, y: 5.0, w: 5.85, h: 1.78 });
+  s.addShape(pres.ShapeType.rect, { x: 6.67, y: 5.0, w: 0.07, h: 1.78, fill: { color: C.yellow }, line: { width: 0 } });
+  h3(s, "Auto-remediation chain", { x: 6.95, y: 5.24, w: 4 });
+  body(s, "diagnose → decide whether action is needed → act → verify. The verify step runs no tools; it reviews what happened and states whether the issue is actually resolved.",
+    { x: 6.95, y: 5.6, w: 5.3, h: 1.0, size: 11.5 });
+
+  s.addNotes(
+    "The verify node is the differentiator. Most demos stop at 'the AI did something'. This one checks. " +
+    "Also worth saying: two of the three agents cannot change anything at all — that is deliberate."
+  );
+}
+
+/* ══════════════════ 5 — ARCHITECTURE, THE CORE IDEA ══════════════════ */
+{
+  const s = slide("Architecture", "The model decides inside an agent. We decide between them.");
+
+  body(s,
+    "Two different things both get called “the flow”, and mixing them up is where most agent systems go wrong.",
+    { x: 0.62, y: 1.86, w: 11.9, h: 0.4, size: 14 });
+
+  // Inside
+  card(s, { x: 0.62, y: 2.44, w: 5.85, h: 2.5 });
+  s.addText("INSIDE ONE AGENT — A LOOP", {
+    x: 0.9, y: 2.68, w: 5, h: 0.26, margin: 0, fontFace: F.body, fontSize: 10, bold: true, color: C.grey, charSpacing: 1.8,
+  });
+  body(s, "The model asks for one tool. Our Python runs it and hands back the result. The model reads it and decides what to ask for next. Nobody knows in advance how many rounds it takes.",
+    { x: 0.9, y: 3.04, w: 5.3, h: 1.1, size: 12 });
+  s.addText("The model can only ask. It never executes anything.", {
+    x: 0.9, y: 4.28, w: 5.3, h: 0.4, margin: 0, fontFace: F.body, fontSize: 12, bold: true, color: C.ink,
+  });
+
+  // Between
+  card(s, { x: 6.67, y: 2.44, w: 5.85, h: 2.5 });
+  s.addShape(pres.ShapeType.rect, { x: 6.67, y: 2.44, w: 0.07, h: 2.5, fill: { color: C.yellow }, line: { width: 0 } });
+  s.addText("BETWEEN AGENTS — A FLOWCHART", {
+    x: 6.95, y: 2.68, w: 5, h: 0.26, margin: 0, fontFace: F.body, fontSize: 10, bold: true, color: C.grey, charSpacing: 1.8,
+  });
+  body(s, "A LangGraph state machine we wrote. Fixed nodes, one conditional branch, a typed shared state passed hand to hand. It always runs the same way and can be pointed at.",
+    { x: 6.95, y: 3.04, w: 5.3, h: 1.1, size: 12 });
+  s.addText("The agents never talk to each other.", {
+    x: 6.95, y: 4.28, w: 5.3, h: 0.4, margin: 0, fontFace: F.body, fontSize: 12, bold: true, color: C.ink,
+  });
+
+  card(s, { x: 0.62, y: 5.2, w: 11.9, h: 1.6 });
+  h3(s, "Why not let them negotiate, like CrewAI or AutoGen?", { x: 0.9, y: 5.46, w: 9 });
+  body(s,
+    "Because that is non-deterministic, hard to debug, hard to bound, and can loop indefinitely burning tokens. " +
+    "In operations, unpredictable is the wrong kind of impressive. A fixed route means the run can be shown, " +
+    "in order, and proven.",
+    { x: 0.9, y: 5.84, w: 11.2, h: 0.8, size: 12.5 });
+
+  s.addNotes(
+    "If asked 'how do your agents communicate?' — they do not. They write to a typed shared state in a fixed " +
+    "order. Two LLMs negotiating is not a feature, it is a debugging problem."
+  );
+}
+
+/* ══════════════════ 6 — STACK AND WHERE THE MODEL SITS ══════════════════ */
+{
+  const s = slide("Technology", "Where each layer does its work");
+
+  table(s, [
+    [hdr("Layer"), hdr("What it actually does"), hdr("Technology")],
+    [{ text: "Decides", options: { bold: true, color: C.ink } },
+     "Picks the next tool; writes the diagnosis, the routing decision and the final verdict",
+     { text: "Groq · llama-3.3-70b-versatile · temperature 0", options: { color: C.ink } }],
+    [{ text: "Routes", options: { bold: true, color: C.ink } },
+     "The ReAct loop inside each agent, and the state machines between them",
+     "LangGraph"],
+    [{ text: "Plumbs", options: { bold: true, color: C.ink } },
+     "Model adapter, tool schemas generated from function signatures, typed messages",
+     "LangChain"],
+    [{ text: "Does", options: { bold: true, color: C.ink } },
+     "All 33 tools. Reads the machine, writes the backups, enforces every boundary",
+     "Python · FastAPI · psutil · paramiko"],
+    [{ text: "Shows", options: { bold: true, color: C.ink } },
+     "Reasoning trace, verdict cards, live workflow chart, host enrolment",
+     "Next.js 16 · React 19 · Tailwind v4"],
+    [{ text: "Stores", options: { bold: true, color: C.ink } },
+     "Accounts, orgs, hosts, jobs, metrics, sessions",
+     "SQLite"],
+  ], { x: 0.62, y: 1.92, w: 11.9, colW: [1.5, 6.2, 4.2] });
+
+  card(s, { x: 0.62, y: 5.05, w: 5.85, h: 1.72 });
+  h3(s, "One auto-remediation run", { x: 0.9, y: 5.3, w: 5 });
+  body(s, "Log Analyzer loop 3–6 calls · router exactly 1 · Backup loop 3–6 if routed · supervisor exactly 1.",
+    { x: 0.9, y: 5.66, w: 5.3, h: 0.6, size: 12 });
+  s.addText("8–14 model calls per click", {
+    x: 0.9, y: 6.24, w: 5.3, h: 0.34, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.ink,
+  });
+
+  card(s, { x: 6.67, y: 5.05, w: 5.85, h: 1.72 });
+  s.addShape(pres.ShapeType.rect, { x: 6.67, y: 5.05, w: 0.07, h: 1.72, fill: { color: C.yellow }, line: { width: 0 } });
+  h3(s, "Which is why the model choice is architectural", { x: 6.95, y: 5.3, w: 5.4, size: 14 });
+  body(s, "Groq is inference hardware, not a model — the same open weights, far faster. A dozen sequential calls is the difference between interactive and a batch job. Open weights also mean it can be self-hosted for anyone who will not send data out.",
+    { x: 6.95, y: 5.66, w: 5.3, h: 1.0, size: 11.5 });
+
+  s.addNotes(
+    "If asked why a framework at all — concede it. A hand-rolled loop is about 60 lines and would work. " +
+    "What LangChain and LangGraph bought was tool schemas from signatures, typed messages, the conditional " +
+    "branch for free, and a one-line provider swap. Real benefits, not necessities."
+  );
+}
+
+/* ══════════════════ 7 — REACHING MACHINES ══════════════════ */
+{
+  const s = slide("Deployment", "How it reaches a machine that is not this one");
+
+  body(s,
+    "One abstraction, three implementations, and the only difference is who opens the connection. Nothing " +
+    "upstream ever learns which one answered.",
+    { x: 0.62, y: 1.86, w: 11.9, h: 0.5, size: 14 });
+
+  table(s, [
+    [hdr("Transport"), hdr("Who connects"), hdr("Install"), hdr("Crosses a firewall?"), hdr("Trade-off")],
+    ["local", "Nobody — same machine", "No", { text: "n/a", options: { color: C.grey } }, "Only the host running the API"],
+    ["ssh", "We connect out to them", "No", { text: "No — we are a stranger knocking", options: { color: C.bad } }, "We hold a credential that opens a shell"],
+    [{ text: "agent", options: { bold: true, color: C.ink } },
+     { text: "They connect out to us", options: { bold: true, color: C.ink } },
+     "Yes, one daemon",
+     { text: "Yes — outbound only", options: { color: C.good, bold: true } },
+     { text: "Something must be installed", options: { color: C.ink } }],
+  ], { x: 0.62, y: 2.62, w: 11.9, colW: [1.5, 2.9, 1.5, 3.0, 3.0] });
+
+  card(s, { x: 0.62, y: 4.5, w: 11.9, h: 2.28 });
+  s.addShape(pres.ShapeType.rect, { x: 0.62, y: 4.5, w: 0.07, h: 2.28, fill: { color: C.yellow }, line: { width: 0 } });
+  h3(s, "Enrolment, and why the direction matters", { x: 0.95, y: 4.76, w: 8 });
+  body(s,
+    "The dashboard issues a single-use token that expires in 60 minutes. The daemon redeems it once for a " +
+    "permanent key, and the token is destroyed in the same transaction — so a stolen token is either already " +
+    "dead, expired, or announces the theft by making your own install fail. From then on the daemon polls " +
+    "outbound every 3 seconds and does the work locally.",
+    { x: 0.95, y: 5.14, w: 11.2, h: 1.0, size: 12.5 });
+  s.addText(
+    "A firewall blocks strangers coming in and permits people inside going out. By flipping who dials, the " +
+    "product never has to ask anyone's network team for permission.",
+    { x: 0.95, y: 6.16, w: 11.2, h: 0.5, margin: 0, fontFace: F.body, fontSize: 12.5, bold: true, color: C.ink, lineSpacing: 17 }
+  );
+
+  s.addNotes(
+    "This is the most technically credible slide. Most projects at this stage hard-code 'the machine being " +
+    "inspected is the machine running the code'. The outbound-polling daemon is exactly how NinjaOne and Atera " +
+    "reach a machine behind a home router."
+  );
+}
+
+/* ══════════════════ 8 — SECURITY ══════════════════ */
+{
+  const s = slideDark("Security", "Bounded by construction, not by instruction");
+
+  body(s,
+    "The model produces a request. Our code decides whether to honour it. Every boundary below is enforced in " +
+    "Python, not asked for in a prompt.",
+    { x: 0.62, y: 1.88, w: 11.9, h: 0.5, size: 14, dark: true });
+
+  const layers = [
+    ["Credentials", "scrypt at twice the OWASP floor. Session tokens, enrolment tokens and agent keys are stored only as SHA-256 digests — the server never holds the value it checks. SSH secrets encrypted with Fernet, decrypted only in memory for the length of one connection."],
+    ["Blast radius", "Each agent holds only its own domain's tools. Two of the three cannot change anything at all. Diagnostic commands are a fixed 13-item allowlist; anything else is refused by name."],
+    ["Generated code", "LLM-written snippets pass an AST validator that denies by default — no imports, no function definitions, no dunder access, and any unrecognised syntax node is rejected. Restricted globals, 10-second timeout."],
+    ["Prompt injection", "Log reads are path-guarded: no absolute paths, no directory escapes, and filenames containing env, secret, password, token or key are refused. Without it, read_log_file('.env') would hand the API key to the model."],
+  ];
+  layers.forEach(([t, d], i) => {
+    const y = 2.6 + i * 1.06;
+    s.addShape(pres.ShapeType.rect, { x: 0.62, y, w: 0.055, h: 0.92, fill: { color: C.yellow }, line: { width: 0 } });
+    h3(s, t, { x: 0.92, y: y + 0.02, w: 2.12, size: 13, dark: true });
+    body(s, d, { x: 3.15, y, w: 9.35, h: 0.92, size: 11, dark: true });
+  });
 
   s.addText(
-    "Aurora Ops gives agents real tools on real machines. They decide which tools to call, hand work " +
-    "to each other, and report in plain language — with every tool call shown.",
-    { x: 0.6, y: 1.72, w: 8.6, h: 0.8, margin: 0, fontFace: F.body, fontSize: 15, color: C.body, lineSpacing: 22 }
+    "Stated openly: if ITOPS_SECRET_KEY is unset, credential encryption falls back to a development key; SSH " +
+    "trusts an unknown host on first contact; SQLite is single-process. All three are documented in the README.",
+    { x: 0.62, y: 6.86, w: 11.9, h: 0.42, margin: 0, fontFace: F.body, fontSize: 10.5, color: C.grey, lineSpacing: 14 }
   );
 
-  const proofs = [
-    ["01", "Tool choice at runtime", "25 tools over 22 probes. “Which process is eating RAM?” calls different tools than “check my disks” — chosen from what the previous call returned.", C.mint],
-    ["02", "A decision, not a branch", "A supervisor reads the diagnosis and decides at runtime whether remediation is needed at all. Nobody pre-wrote that per host.", C.blue],
-    ["03", "Handoff between agents", "Log Analyzer → decision → Backup & DR → a supervisor that reads the whole chain back before anything reaches you.", C.mint],
-  ];
-  proofs.forEach(([n, h, b, col], i) => {
-    const x = 0.6 + i * 4.15;
-    card(s, { x, y: 2.72, w: 3.85, h: 2.5, fill: C.panel2 });
-    s.addText(n, {
-      x: x + 0.32, y: 2.98, w: 1, h: 0.44, margin: 0,
-      fontFace: F.head, fontSize: 22, bold: true, color: col,
-    });
-    s.addText(h, {
-      x: x + 0.32, y: 3.46, w: 3.25, h: 0.34, margin: 0,
-      fontFace: F.head, fontSize: 16, bold: true, color: C.text,
-    });
-    s.addText(b, {
-      x: x + 0.32, y: 3.86, w: 3.25, h: 1.24, margin: 0,
-      fontFace: F.body, fontSize: 12, color: C.body, lineSpacing: 16.5,
-    });
-  });
-
-  // The line that separates this from a chatbot demo.
-  card(s, { x: 0.6, y: 5.5, w: 12.1, h: 1.32, fill: C.panel });
-  s.addText("NOT A CHATBOT WITH API ACCESS", {
-    x: 0.95, y: 5.72, w: 5, h: 0.24, margin: 0,
-    fontFace: F.body, fontSize: 10, bold: true, color: C.mint, charSpacing: 2,
-  });
-  s.addText(
-    "These run against customer machines through two connection paths — a one-line agent install, or agentless SSH — " +
-    "with per-request host binding, so a run can never report on the wrong server.",
-    { x: 0.95, y: 6.04, w: 11.4, h: 0.66, margin: 0, fontFace: F.body, fontSize: 13, color: C.body, lineSpacing: 18 }
+  s.addNotes(
+    "The path guard is the best story here — it anticipates what the model could be talked into doing, not just " +
+    "what it is allowed to do. Naming the three known gaps yourself is far stronger than being asked about them."
   );
-
-  s.addNotes("The three cards are the whole 'why agentic'. All three are demoable live.");
 }
 
-/* ══════════════ 3 — FEATURES ══════════════ */
+/* ══════════════════ 9 — THE MARKET ══════════════════ */
 {
-  const s = slide("Features", "Built as a product, not a prototype");
+  const s = slide("Competitive landscape", "Five layers, and only one of them is a rival");
 
-  const feats = [
-    ["Fleet onboarding", "Connect a server two ways: one-line agent install, or agentless SSH. The agent polls outbound — no inbound firewall rule.", C.mint],
-    ["Three live specialists", "System Health, Log Analyzer, Backup & DR — each with its own tools and its own report.", C.blue],
-    ["Smart orchestrator", "Describe a symptom instead of picking an agent. One router call sends it to the right specialist.", C.mint],
-    ["Remediation chain", "Diagnose → decide → remediate → verify, with the middle stage decided at runtime.", C.blue],
-    ["Reasoning trace", "Every run shows which tools were called and what came back. Not a black box.", C.mint],
-    ["History & dashboard", "Every run recorded — who triggered it, which agent acted, what it did, and the outcome.", C.blue],
-  ];
-  feats.forEach(([h, b, col], i) => {
-    const cx = i % 2, cy = Math.floor(i / 2);
-    const x = 0.6 + cx * 6.28;
-    const y = 1.66 + cy * 1.70;
-    card(s, { x, y, w: 5.95, h: 1.46, fill: cy % 2 ? C.panel2 : C.panel });
-    s.addShape(pres.ShapeType.roundRect, {
-      x: x + 0.3, y: y + 0.3, w: 0.34, h: 0.34, rectRadius: 0.08,
-      fill: { color: col }, line: { color: col, width: 0 },
-    });
-    s.addText(h, {
-      x: x + 0.8, y: y + 0.27, w: 4.9, h: 0.34, margin: 0,
-      fontFace: F.head, fontSize: 15.5, bold: true, color: C.text,
-    });
-    s.addText(b, {
-      x: x + 0.8, y: y + 0.68, w: 4.85, h: 0.76, margin: 0,
-      fontFace: F.body, fontSize: 12, color: C.body, lineSpacing: 16,
-    });
-  });
+  table(s, [
+    [hdr("Layer"), hdr("Who"), hdr("What they do"), hdr("Relationship")],
+    ["Monitoring", "Datadog, Zabbix, Grafana", "Watch numbers, raise alarms", { text: "Upstream — they create the alarm", options: { color: C.grey } }],
+    ["Alert grouping", "Moogsoft, BigPanda, PagerDuty", "Turn 10,000 alerts into 12 incidents", { text: "Adjacent — reduces noise, does not diagnose", options: { color: C.grey } }],
+    ["AI SRE", "Resolve.ai, Traversal, Cleric", "Investigate an alert, post a diagnosis", { text: "The hype centre — but see below", options: { color: C.ink } }],
+    [{ text: "RMM", options: { bold: true, color: C.ink } },
+     { text: "NinjaOne, Atera, ConnectWise", options: { bold: true, color: C.ink } },
+     "Manage endpoints for IT teams and providers",
+     { text: "Our actual neighbourhood", options: { bold: true, color: C.ink } }],
+    ["Open source", "HolmesGPT, K8sGPT", "Agentic investigation, Kubernetes-first", { text: "Closest technical relatives", options: { color: C.grey } }],
+  ], { x: 0.62, y: 1.92, w: 11.9, colW: [1.9, 3.1, 3.4, 3.5] });
 
-  s.addText("Roadmap — Network Sentinel and Disk Auditor are provisioned in the fleet and marked standby; the router already fans out to their lanes.", {
-    x: 0.6, y: 6.72, w: 12.1, h: 0.28, margin: 0, fontFace: F.body, fontSize: 11, italic: true, color: C.muted,
-  });
+  card(s, { x: 0.62, y: 4.86, w: 11.9, h: 1.9 });
+  s.addShape(pres.ShapeType.rect, { x: 0.62, y: 4.86, w: 0.07, h: 1.9, fill: { color: C.yellow }, line: { width: 0 } });
+  h3(s, "The AI SRE wave gets the attention. It is not where we compete.", { x: 0.95, y: 5.12, w: 10 });
+  body(s,
+    "Those tools speak in services, traces, spans and Kubernetes pods, and assume an observability estate that " +
+    "costs six figures a year. Our agents look at CPU, memory, disk, log files and backup folders on a machine. " +
+    "That is endpoint-management vocabulary — a different world, a different buyer, and a far larger and less " +
+    "served one.",
+    { x: 0.95, y: 5.5, w: 11.2, h: 1.0, size: 12.5 });
 
-  s.addNotes("If asked what is not live: the two standby agents. The UI already labels them standby, so nothing here overclaims.");
+  s.addNotes(
+    "Know the names. Resolve.ai reached unicorn valuation in under two years. Traversal claims 90%+ root-cause " +
+    "accuracy — a self-reported marketing figure with no independent benchmark. Cleric is deliberately read-only."
+  );
 }
 
-/* ══════════════ 4 — TECH STACK & DATA FLOW ══════════════ */
+/* ══════════════════ 10 — EDGE AND LIMITS ══════════════════ */
 {
-  const s = slide("Technology stack and data flow", "How a request becomes a verified report");
+  const s = slide("Position", "What we beat, and where we lose");
 
-  // Stack, left.
-  card(s, { x: 0.6, y: 1.72, w: 5.1, h: 5.1, fill: C.panel2 });
-  s.addText("STACK", {
-    x: 0.92, y: 1.96, w: 3, h: 0.24, margin: 0,
-    fontFace: F.body, fontSize: 10, bold: true, color: C.mint, charSpacing: 2,
-  });
-  const stack = [
-    ["Frontend", "Next.js 16 · React 19 · TypeScript"],
-    ["Orchestration", "LangGraph — 2 state graphs"],
-    ["Agents", "LangChain ReAct · 25 tools"],
-    ["Model", "Groq llama-3.3-70b · temp 0"],
-    ["API", "FastAPI — 33 endpoints"],
-    ["Storage", "SQLite WAL · 10 tables · 90-day retention"],
-    ["Security", "scrypt · opaque sessions · Fernet-encrypted keys"],
-    ["Transports", "Local · SSH · installed agent"],
-  ];
-  stack.forEach(([k, v], i) => {
-    const y = 2.34 + i * 0.56;
-    s.addText(k, {
-      x: 0.92, y, w: 1.6, h: 0.26, margin: 0,
-      fontFace: F.head, fontSize: 12, bold: true, color: C.text,
-    });
-    s.addText(v, {
-      x: 2.5, y, w: 2.95, h: 0.44, margin: 0,
-      fontFace: F.body, fontSize: 11.5, color: C.body, lineSpacing: 14,
-    });
+  s.addShape(pres.ShapeType.rect, { x: 0.62, y: 1.82, w: 5.85, h: 0.06, fill: { color: C.yellow }, line: { width: 0 } });
+  s.addText("WHERE WE WIN", {
+    x: 0.62, y: 2.0, w: 5, h: 0.26, margin: 0, fontFace: F.body, fontSize: 10.5, bold: true, color: C.ink, charSpacing: 1.8,
   });
 
-  // Flow, right — one column of stages with connectors.
-  card(s, { x: 6.05, y: 1.72, w: 6.65, h: 5.1, fill: C.panel });
-  s.addText("DATA FLOW", {
-    x: 6.4, y: 1.96, w: 3, h: 0.24, margin: 0,
-    fontFace: F.body, fontSize: 10, bold: true, color: C.blue, charSpacing: 2,
-  });
-  const flow = [
-    ["Operator", "types a request in the console", C.blue],
-    ["FastAPI → LangGraph", "state graph picks the route", C.blue],
-    ["Agent reasons", "chooses which of its tools to call", C.mint],
-    ["Host binding", "per request — never a global", C.mint],
-    ["Transport", "Local · SSH · installed agent", C.mint],
-    ["22 probes run", "on the customer’s machine", C.mint],
-    ["Report + trace", "stored, shown with every tool call", C.blue],
+  const wins = [
+    ["We act", "Cleric is explicitly read-only by design; most of that tier stops at a diagnosis. Our backup agent creates, verifies and restores — and the chain then checks whether it worked."],
+    ["A far lower floor", "The open-source tools need Kubernetes. The commercial ones need a full observability stack. This needs a computer."],
+    ["Real fleet architecture", "Local, SSH and outbound-polling daemon behind one abstraction — the hard part of multi-host, already built."],
+    ["A glass box", "Every tool call and result is shown. In a category whose whole barrier is trust, showing the working is the mechanism."],
   ];
-  flow.forEach(([h, b, col], i) => {
-    const y = 2.36 + i * 0.63;
-    s.addShape(pres.ShapeType.ellipse, {
-      x: 6.42, y: y + 0.07, w: 0.2, h: 0.2, fill: { color: col }, line: { color: col, width: 0 },
-    });
-    if (i < flow.length - 1) {
-      s.addShape(pres.ShapeType.line, {
-        x: 6.52, y: y + 0.27, w: 0, h: 0.43, line: { color: C.line, width: 1.5 },
-      });
-    }
-    s.addText(h, {
-      x: 6.85, y: y - 0.02, w: 2.6, h: 0.28, margin: 0,
-      fontFace: F.head, fontSize: 13, bold: true, color: C.text,
-    });
-    s.addText(b, {
-      x: 9.6, y: y - 0.02, w: 2.9, h: 0.34, margin: 0,
-      fontFace: F.body, fontSize: 11.5, color: C.muted,
-    });
+  wins.forEach(([t, d], i) => {
+    const y = 2.36 + i * 1.12;
+    h3(s, t, { x: 0.62, y, w: 5.4, size: 13 });
+    body(s, d, { x: 0.62, y: y + 0.28, w: 5.6, h: 0.78, size: 11 });
+  });
+
+  s.addShape(pres.ShapeType.rect, { x: 6.67, y: 1.82, w: 5.85, h: 0.06, fill: { color: C.greyLite }, line: { width: 0 } });
+  s.addText("WHERE WE LOSE — AND THE HONEST ANSWER", {
+    x: 6.67, y: 2.0, w: 5.6, h: 0.26, margin: 0, fontFace: F.body, fontSize: 10.5, bold: true, color: C.grey, charSpacing: 1.8,
+  });
+
+  const losses = [
+    ["No cross-host correlation", "Single-host depth first. The transport layer is already built for multi-host."],
+    ["Logs come from a file, not a platform", "It is a tool interface. Swapping the reader for a Splunk or Loki client does not change the agent."],
+    ["Only one agent can act", "Said plainly: one domain done properly beats four claimed."],
+    ["No accuracy benchmark", "Nor does anyone else, verifiably — rivals' figures are self-reported marketing with no independent test."],
+  ];
+  losses.forEach(([t, d], i) => {
+    const y = 2.36 + i * 1.12;
+    h3(s, t, { x: 6.67, y, w: 5.6, size: 13 });
+    body(s, d, { x: 6.67, y: y + 0.28, w: 5.6, h: 0.78, size: 11 });
   });
 
   s.addNotes(
-    "Two details a technical reviewer will care about: the installed agent polls outbound, so no inbound firewall rule; " +
-    "and host binding is per-request via ContextVar — a module global would leak one tenant's host into another's run."
+    "Conceding the right-hand column is what makes the left-hand column believable. Never claim an accuracy " +
+    "number you cannot defend — say that nobody in this category has a verifiable one."
   );
 }
 
-/* ══════════════ 5 — OUTCOMES / IMPACT ══════════════ */
+/* ══════════════════ 11 — ROADMAP ══════════════════ */
 {
-  const s = slide("Outcomes and impact", "What changes when judgement is automated", { titleSize: 32, titleH: 0.8 });
+  const s = slideDark("What comes next", "Ordered by what a real deployment would hit first");
 
-  // Comparison, left.
-  const cols = [
-    ["Monitoring", "Datadog, Zabbix", C.muted],
-    ["Scripts / RPA", "cron, Ansible", C.muted],
-    ["Aurora Ops", "this project", C.mint],
+  const phases = [
+    ["Harden", "Refuse to start without ITOPS_SECRET_KEY rather than falling back to a development key. Pin SSH host keys at enrolment. Retry wrapper around malformed tool calls — the one failure actually observed in testing."],
+    ["Connect", "Log-platform clients behind the existing tool interface. Paging and ticketing integrations, so a verdict becomes an incident. Server-sent events, so the workflow chart shows true per-stage progress instead of an estimate."],
+    ["Correlate", "Cross-host reasoning: the transport layer already supports a fleet, but each agent still looks at one machine at a time. This is where the market's most valuable claim sits."],
+    ["Measure", "A benchmark of synthetic incidents with a stated methodology. Being the only team in the room with a real, defensible number is worth more than a larger one that cannot be shown."],
   ];
-  const rows = [
-    ["Detects a problem", "yes", "—", "yes"],
-    ["Diagnoses the cause", "human", "fixed steps", "agent reasons"],
-    ["Decides what to do", "—", "pre-written", "at runtime"],
-    ["Explains in plain language", "—", "—", "yes"],
-    ["Handles a new question", "—", "new script", "same tools"],
-    ["Shows its work", "—", "logs", "full trace"],
-  ];
-  card(s, { x: 0.6, y: 1.72, w: 7.55, h: 4.05, fill: C.panel2 });
-  cols.forEach(([h, sub, col], i) => {
-    const x = 3.15 + i * 1.62;
-    s.addText(h, { x, y: 1.94, w: 1.55, h: 0.24, margin: 0, fontFace: F.head, fontSize: 11.5, bold: true, color: col, align: "center" });
-    s.addText(sub, { x, y: 2.16, w: 1.55, h: 0.22, margin: 0, fontFace: F.body, fontSize: 9, color: C.muted, align: "center" });
-  });
-  rows.forEach((r, i) => {
-    const y = 2.58 + i * 0.5;
-    s.addText(r[0], { x: 0.92, y, w: 2.2, h: 0.28, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.body });
-    for (let c = 1; c <= 3; c++) {
-      s.addText(r[c], {
-        x: 3.15 + (c - 1) * 1.62, y, w: 1.55, h: 0.28, margin: 0, align: "center",
-        fontFace: F.body, fontSize: 11.5, bold: c === 3, color: c === 3 ? C.mint : C.muted,
-      });
-    }
-  });
-
-  // Measured, right.
-  card(s, { x: 8.5, y: 1.72, w: 4.2, h: 4.05, fill: C.panel });
-  s.addText("MEASURED TODAY", {
-    x: 8.82, y: 1.94, w: 3.2, h: 0.24, margin: 0,
-    fontFace: F.body, fontSize: 10, bold: true, color: C.mint, charSpacing: 2,
-  });
-  const measured = [
-    ["3.3 s", "full 3-agent remediation chain, end to end"],
-    ["20.9 s", "deep health inspection — 22 probes plus reasoning"],
-    ["10 → 1", "manual shell commands replaced by one snapshot"],
-    ["0", "inbound firewall rules to onboard a server"],
-  ];
-  measured.forEach(([n, l], i) => {
-    const y = 2.4 + i * 0.85;
-    s.addText(n, { x: 8.82, y, w: 1.5, h: 0.42, margin: 0, fontFace: F.head, fontSize: 24, bold: true, color: C.mint });
-    s.addText(l, { x: 8.82, y: y + 0.42, w: 3.6, h: 0.4, margin: 0, fontFace: F.body, fontSize: 10.5, color: C.body, lineSpacing: 13 });
-  });
-
-  // The hours model — assumptions visible on purpose.
-  card(s, { x: 0.6, y: 5.98, w: 12.1, h: 0.9, fill: C.panel2 });
-  s.addText("ESTIMATED HOURS SAVED", {
-    x: 0.92, y: 6.14, w: 3, h: 0.22, margin: 0,
-    fontFace: F.body, fontSize: 9.5, bold: true, color: C.blue, charSpacing: 2,
-  });
-  s.addText(
-    "50 servers × 2 events/month × 25 min × 70% agent-sufficient  →  ≈29 hours/month on first-pass triage.",
-    { x: 0.92, y: 6.38, w: 8.3, h: 0.36, margin: 0, fontFace: F.body, fontSize: 12, color: C.text }
-  );
-  s.addText("Assumption model — swap in your own fleet numbers.", {
-    x: 9.4, y: 6.4, w: 3.0, h: 0.32, margin: 0, fontFace: F.body, fontSize: 10.5, italic: true, color: C.muted, align: "right",
+  phases.forEach(([t, d], i) => {
+    const y = 1.94 + i * 1.24;
+    s.addText(String(i + 1).padStart(2, "0"), {
+      x: 0.62, y, w: 0.8, h: 0.4, margin: 0, fontFace: F.head, fontSize: 20, bold: true, color: C.yellow,
+    });
+    h3(s, t, { x: 1.5, y: y + 0.04, w: 2.4, size: 15, dark: true });
+    body(s, d, { x: 3.9, y, w: 8.6, h: 1.05, size: 11.5, dark: true });
   });
 
   s.addNotes(
-    "Do not present the 29 hours as a measured result — it is a model, and the inputs are on the slide so anyone can " +
-    "challenge them. The four numbers on the right are the ones actually measured on a laptop."
+    "If asked 'what would you fix first' — the retry wrapper. It is the one failure observed in practice, " +
+    "rather than one imagined."
   );
 }
 
-/* ══════════════ 6 — APPLICATION SNAPSHOTS ══════════════ */
+/* ══════════════════ 12 — SNAPSHOTS ══════════════════ */
 {
-  const s = slide("Application snapshots", "The running product");
+  const s = slide("The product", "Running, not mocked");
 
-  // The reasoning trace leads. It is the only image that settles the question a technical
-  // reviewer actually has — does it choose its tools, or is this a scripted sequence — and it
-  // does so with seven real calls and their real returns.
   const shots = [
-    ["trace", "Seven tool calls the agent chose itself, with what each returned — and memory correctly flagged at 90.2%", 0.6, 1.66, 6.05, 3.42],
-    ["graph", "The remediation chain — every wire is an edge the backend walks", 6.9, 1.66, 5.8, 3.42],
-    ["transcript", "Four agents answering one request, in sequence", 0.6, 5.32, 3.87, 1.7],
-    ["workflow", "Every stage recorded, including the one that was skipped", 4.71, 5.32, 3.87, 1.7],
-    ["dashboard", "Dashboard — every run recorded, scored and charted", 8.83, 5.32, 3.87, 1.7],
+    ["trace", "Agent console — reasoning trace and verdict", 0.62, 1.9, 6.0, 3.38],
+    ["workflow", "Auto-remediation chain", 6.9, 1.9, 5.62, 3.38],
+    ["dashboard", "Run history and outcomes", 0.62, 5.52, 3.86, 1.5],
+    ["fleet", "The agent fleet", 4.72, 5.52, 3.86, 1.5],
+    ["transcript", "Orchestrator — describe a symptom", 8.82, 5.52, 3.7, 1.5],
   ];
-  shots.forEach(([name, cap, x, y, w, h]) => {
-    s.addImage({ ...img(name), x, y, w, h: h - 0.42, rounding: false });
-    s.addShape(pres.ShapeType.rect, {
-      x, y, w, h: h - 0.42, fill: { type: "none" }, line: { color: C.line, width: 1 },
-    });
+  shots.forEach(([n, cap, x, y, w, h]) => {
+    s.addImage({ ...img(n), x, y, w, h, sizing: { type: "cover", w, h } });
+    s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { type: "none" }, line: { color: C.line, width: 1 } });
     s.addText(cap, {
-      x, y: y + h - 0.38, w, h: 0.34, margin: 0,
-      fontFace: F.body, fontSize: 10, color: C.muted, lineSpacing: 12,
+      x, y: y + h + 0.04, w, h: 0.24, margin: 0, fontFace: F.body, fontSize: 9.5, color: C.grey,
     });
   });
 
-  s.addNotes("Live demo order if there is time: Hosts → Run an agent (show the trace) → Auto-remediate → Dashboard.");
+  s.addNotes("Every screen here is the running application against a live backend, not a design mock.");
 }
 
-const out = resolve(HERE, "Aurora-Ops-Overview.pptx");
-await pres.writeFile({ fileName: out });
-console.log("wrote", out);
+/* ══════════════════ 13 — CLOSE ══════════════════ */
+{
+  const s = pres.addSlide();
+  s.background = { color: C.charcoal };
+  s.addShape(pres.ShapeType.rect, {
+    x: 10.2, y: -1.4, w: 1.5, h: 6.2, fill: { color: C.yellow }, line: { width: 0 }, rotate: 28,
+  });
+
+  s.addText("IN ONE SENTENCE", {
+    x: 0.75, y: 2.1, w: 8, h: 0.3, margin: 0,
+    fontFace: F.body, fontSize: 11.5, bold: true, color: C.yellow, charSpacing: 3,
+  });
+  s.addText(
+    "The AI-SRE wave is building brilliant diagnosticians for teams that already have Kubernetes and a " +
+    "six-figure observability bill — and most of them deliberately stop short of touching anything.",
+    { x: 0.72, y: 2.6, w: 9.0, h: 1.4, margin: 0, fontFace: F.head, fontSize: 21, bold: true, color: C.white, lineSpacing: 30 }
+  );
+  s.addText(
+    "Aurora Ops goes after the same 3am problem for everyone else: it needs nothing but the machine, it shows " +
+    "every step of its reasoning, and on the one class of problem where acting is safe, it acts — and then " +
+    "verifies it worked.",
+    { x: 0.75, y: 4.2, w: 9.0, h: 1.1, margin: 0, fontFace: F.body, fontSize: 15, color: C.greyLite, lineSpacing: 24 }
+  );
+
+  s.addShape(pres.ShapeType.rect, { x: 0.75, y: 5.6, w: 3.4, h: 0.035, fill: { color: C.yellow }, line: { width: 0 } });
+  s.addText("Thank you", {
+    x: 0.75, y: 5.82, w: 6, h: 0.4, margin: 0, fontFace: F.head, fontSize: 17, bold: true, color: C.white,
+  });
+
+  s.addNotes("Two claims, both defensible, both narrow enough to survive questions. Resist widening them.");
+}
+
+const OUT = resolve(HERE, "Aurora-Ops-Overview.pptx");
+await pres.writeFile({ fileName: OUT });
+console.log("wrote", OUT);
