@@ -57,3 +57,6 @@ next-env.d.ts
 
 # PowerPoint lock files, created while a deck is open
 ~$*
+
+# Generated slide renders — regenerate with deck/render-deck.ps1
+/deck/render/

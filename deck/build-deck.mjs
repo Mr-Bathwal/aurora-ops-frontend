@@ -41,11 +41,16 @@ const C = {
 
 const F = { head: "Arial", body: "Arial" };
 
-/** Measured once, so images are placed at their true aspect and never stretched. */
+/** Printed by prep-shots.mjs from the real captures, so the deck and the images can never
+ *  quietly disagree about shape. Never hand-edit these. */
 const AR = {
-  console: 2720 / 840, rail: 792 / 800, prompts: 1360 / 600, fleetgrid: 2760 / 720,
-  hero: 2800 / 1400, graph: 1320 / 440, chart: 900 / 460, dashboard: 2800 / 1720,
-  transcript: 2800 / 1720, trace: 2800 / 1720,
+  console: 3.3429,
+  rail: 0.9519,
+  robot: 2.46,
+  prompts: 1.4304,
+  chart: 1.9608,
+  graph: 1.8176,
+  fleetgrid: 3.7742,
 };
 const img = (n) => ({ data: "image/png;base64," + readFileSync(resolve(HERE, "img", n + ".png")).toString("base64") });
 
@@ -85,12 +90,37 @@ function h3(s, text, { x, y, w = 4, size = 15, color = C.white }) {
   s.addText(text, { x, y, w, h: 0.32, margin: 0, fontFace: F.head, fontSize: size, bold: true, color });
 }
 
-/** Places an image at its true aspect inside a width, and draws the hairline that separates it
- *  from the charcoal. Returns the height used, so the caller can lay out beneath it. */
-function shot(s, name, { x, y, w }) {
-  const h = w / AR[name];
-  s.addImage({ ...img(name), x, y, w, h });
-  s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { type: "none" }, line: { color: C.line, width: 1 } });
+/** A screenshot in an EY mount, and the height it consumes.
+ *
+ * The product is near-black, so a screenshot dropped straight onto the charcoal ground reads
+ * as a hole punched in the slide — which is exactly why the branding felt thin wherever a
+ * picture appeared. The mount fixes it: a raised panel, the yellow rule across its head, and a
+ * caption strip underneath. The picture then reads as a deliberately framed exhibit, and the
+ * yellow re-enters every slide that has one.
+ *
+ * Returns total height so callers lay out beneath it from a real number rather than a guess.
+ */
+const FIG_INSET = 0.16, FIG_RULE = 0.055, FIG_CAP = 0.4;
+
+function figure(s, name, { x, y, w, label }) {
+  const imgW = w - FIG_INSET * 2;
+  const imgH = imgW / AR[name];
+  // A long label wraps to two lines; the strip has to grow or it crowds the picture.
+  const capH = label ? (label.length > 38 ? FIG_CAP + 0.2 : FIG_CAP) : 0;
+  const h = FIG_RULE + FIG_INSET * 2 + imgH + capH;
+
+  s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { color: C.raised }, line: { color: C.line, width: 1 } });
+  s.addShape(pres.ShapeType.rect, { x, y, w, h: FIG_RULE, fill: { color: C.yellow }, line: { width: 0 } });
+
+  const iy = y + FIG_RULE + FIG_INSET;
+  s.addImage({ ...img(name), x: x + FIG_INSET, y: iy, w: imgW, h: imgH });
+
+  if (label) {
+    s.addText(label.toUpperCase(), {
+      x: x + FIG_INSET, y: iy + imgH + 0.06, w: imgW, h: 0.26, margin: 0,
+      fontFace: F.body, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.5,
+    });
+  }
   return h;
 }
 
@@ -243,22 +273,24 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
   body(s,
     "You describe the problem the way you would to a colleague. It works out which checks to run, runs them on " +
     "the real machine, and tells you what it found in plain language — showing every step it took.",
-    { x: 0.62, y: 1.86, w: 11.9, h: 0.6, size: 14, color: C.white });
+    { x: 0.62, y: 1.82, w: 11.9, h: 0.5, size: 14, color: C.white });
 
-  shot(s, "console", { x: 0.62, y: 2.6, w: 11.9 });
-
-  const beats = [
-    ["You ask", "In your own words. No commands, no syntax."],
-    ["It decides", "Which checks matter, and what to look at next based on what it just found."],
-    ["It reports", "Plain language, with a clear verdict: healthy, warning, or critical."],
-  ];
-  beats.forEach(([t, d], i) => {
+  // The three beats sit above the picture as one line, so the screenshot owns the slide.
+  [
+    ["You ask", "in your own words"],
+    ["It decides", "which checks matter, and what next"],
+    ["It reports", "in plain language, with a clear verdict"],
+  ].forEach(([t, d], i) => {
     const x = 0.62 + i * 4.02;
-    h3(s, t, { x, y: 5.6, w: 3.7, size: 14 });
-    body(s, d, { x, y: 5.92, w: 3.7, h: 0.7, size: 11.5 });
+    s.addText(
+      [{ text: t + " ", options: { bold: true, color: C.yellow } }, { text: d, options: { color: C.body } }],
+      { x, y: 2.46, w: 3.9, h: 0.34, margin: 0, fontFace: F.body, fontSize: 12 }
+    );
   });
 
-  underHood(s, "Three ReAct agents on Groq (llama-3.3-70b, temperature 0). 33 Python tools reading the host through psutil.", { x: 0.62, y: 6.84 });
+  figure(s, "console", { x: 1.37, y: 2.96, w: 10.6, label: "The console — talk on the left, watch on the right" });
+
+  underHood(s, "Three ReAct agents on Groq (llama-3.3-70b, temperature 0). 33 Python tools reading the host directly.", { x: 0.62, y: 6.9 });
 
   s.addNotes("This is the live product against a running backend, not a mock-up.");
 }
@@ -272,24 +304,26 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
     "organisational one — the log reader physically cannot delete a backup, because it was never given the ability.",
     { x: 0.62, y: 1.86, w: 11.9, h: 0.6, size: 13.5 });
 
-  shot(s, "fleetgrid", { x: 0.62, y: 2.56, w: 11.9 });
+  // The tiles already name each agent and what it does, so repeating that in cards below would
+  // be the same information twice. What the picture cannot say is the safety point — so that
+  // gets the space instead.
+  const figH = figure(s, "fleetgrid", { x: 0.62, y: 2.56, w: 11.9, label: "The live fleet" });
 
-  const three = [
-    ["System Health", "Is the machine healthy?", "Looks at processor, memory, disk, network, running programs, services, ports.", "Looks only"],
-    ["Log Analyzer", "What do the records say?", "Reads the machine's own logs, counts the errors, finds the pattern, explains it.", "Looks only"],
-    ["Backup & DR", "Is the data safe — and can we fix it?", "Takes backups, checks they are intact, restores them, reports recovery readiness.", "Can act"],
-  ];
-  three.forEach(([n, q, d, mode], i) => {
-    const x = 0.62 + i * 4.02;
-    const acts = mode === "Can act";
-    card(s, { x, y: 4.72, w: 3.72, h: 2.06, accent: acts });
-    h3(s, n, { x: x + 0.3, y: 4.96, w: 3.2, size: 14 });
-    s.addText(q, { x: x + 0.3, y: 5.28, w: 3.2, h: 0.3, margin: 0, fontFace: F.body, fontSize: 11, italic: true, color: C.white });
-    body(s, d, { x: x + 0.3, y: 5.62, w: 3.2, h: 0.8, size: 10.5 });
-    s.addText(mode.toUpperCase(), {
-      x: x + 0.3, y: 6.42, w: 3, h: 0.24, margin: 0,
-      fontFace: F.body, fontSize: 9.5, bold: true, color: acts ? C.yellow : C.muted, charSpacing: 1.5,
+  const y = 2.56 + figH + 0.16;
+  [
+    ["Looks only", "System Health and Log Analyzer", "can read everything and change nothing"],
+    ["Can act", "Backup & DR", "the only one able to alter anything — and only backups"],
+  ].forEach(([tag, who, what], i) => {
+    const x = 0.62 + i * 6.06;
+    card(s, { x, y, w: 5.84, h: 0.92, accent: i === 1 });
+    s.addText(tag.toUpperCase(), {
+      x: x + 0.32, y: y + 0.18, w: 2.4, h: 0.24, margin: 0,
+      fontFace: F.body, fontSize: 9.5, bold: true, color: i === 1 ? C.yellow : C.muted, charSpacing: 1.5,
     });
+    s.addText(
+      [{ text: who + " — ", options: { bold: true, color: C.white } }, { text: what, options: { color: C.body } }],
+      { x: x + 0.32, y: y + 0.44, w: 5.2, h: 0.4, margin: 0, fontFace: F.body, fontSize: 11, lineSpacing: 15 }
+    );
   });
 
   s.addNotes("Say the safety line out loud: two of the three cannot change anything at all. That is deliberate.");
@@ -304,24 +338,30 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
     "So you describe the symptom, and it works out which specialist owns it.",
     { x: 0.62, y: 1.86, w: 6.4, h: 0.9, size: 13.5 });
 
-  card(s, { x: 0.62, y: 2.98, w: 6.4, h: 2.5, accent: true });
-  h3(s, "What you type", { x: 0.98, y: 3.24, w: 5 });
-  ["“How is my server doing right now?”", "“Something went wrong last night”", "“I'm running out of space”"].forEach((t, i) => {
-    s.addText(t, {
-      x: 0.98, y: 3.68 + i * 0.46, w: 5.8, h: 0.36, margin: 0,
-      fontFace: F.body, fontSize: 13.5, color: C.white,
-    });
+  card(s, { x: 0.62, y: 2.94, w: 6.4, h: 1.72, accent: true });
+  h3(s, "Nothing you type names an agent", { x: 0.98, y: 3.16, w: 5.6, size: 15 });
+  body(s,
+    "You say what is wrong. It works out who owns it. If nothing fits, it says so plainly — a system with no " +
+    "way to answer “I don't know” will always guess instead.",
+    { x: 0.98, y: 3.54, w: 5.7, h: 0.9, size: 12 });
+
+  const three = [
+    ["Sounds like", "a health question"],
+    ["Sounds like", "a logs question"],
+    ["Sounds like", "a storage question"],
+  ];
+  three.forEach(([a, b], i) => {
+    const y = 4.86 + i * 0.66;
+    s.addShape(pres.ShapeType.rect, { x: 0.62, y, w: 0.05, h: 0.5, fill: { color: C.yellow }, line: { width: 0 } });
+    s.addText(
+      [{ text: a + " ", options: { color: C.muted } }, { text: b, options: { bold: true, color: C.white } }],
+      { x: 0.94, y: y + 0.06, w: 5.6, h: 0.34, margin: 0, fontFace: F.body, fontSize: 12.5 }
+    );
   });
-  body(s, "Not one of those names an agent. That is the point.", { x: 0.98, y: 5.06, w: 5.8, h: 0.3, size: 11.5 });
 
-  shot(s, "prompts", { x: 7.3, y: 2.24, w: 5.4 });
+  figure(s, "prompts", { x: 7.3, y: 1.9, w: 5.22, label: "What people actually type" });
 
-  card(s, { x: 7.3, y: 4.9, w: 5.22, h: 1.6 });
-  h3(s, "And if it does not fit?", { x: 7.6, y: 5.14, w: 4.6, size: 13.5 });
-  body(s, "It says so, rather than forcing a wrong answer to look confident. A system with no way to say “I don't know” will always guess.",
-    { x: 7.6, y: 5.5, w: 4.6, h: 0.8, size: 11 });
-
-  underHood(s, "One model call classifies the request into one of four routes, then a state machine hands it to that agent.", { x: 0.62, y: 6.84 });
+  underHood(s, "One model call classifies the request into one of four routes, then a state machine hands it to that agent.", { x: 0.62, y: 6.9 });
 
   s.addNotes("The 'no match' branch is worth a sentence — it is a design decision, not a gap.");
 }
@@ -335,7 +375,7 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
     "the problem. Ours takes the next step, on the one kind of problem where the next step is safe to take.",
     { x: 0.62, y: 1.9, w: 6.5, h: 0.9, size: 13.5 });
 
-  shot(s, "chart", { x: 0.62, y: 3.0, w: 6.5 });
+  figure(s, "chart", { x: 0.62, y: 2.96, w: 6.5, label: "The chain, as the operator sees it" });
 
   const stages = [
     ["Read the evidence", "The log reader goes through the machine's records and writes down what it found."],
@@ -371,7 +411,7 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
     "So nothing is hidden: every check it ran, in order, with what came back, and the reasoning that followed.",
     { x: 0.62, y: 1.86, w: 6.5, h: 0.9, size: 13.5 });
 
-  shot(s, "rail", { x: 0.62, y: 2.94, w: 3.2 });
+  figure(s, "rail", { x: 0.62, y: 2.9, w: 2.98, label: "The panel you drive it from" });
 
   const points = [
     ["Every step is shown", "Not a summary of what it did — the actual record of what it did."],
@@ -381,13 +421,16 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
   ];
   points.forEach(([t, d], i) => {
     const y = 2.94 + i * 1.06;
-    s.addShape(pres.ShapeType.rect, { x: 4.3, y, w: 0.05, h: 0.86, fill: { color: C.yellow }, line: { width: 0 } });
-    h3(s, t, { x: 4.6, y: y + 0.02, w: 3.4, size: 13 });
-    body(s, d, { x: 4.6, y: y + 0.34, w: 3.6, h: 0.5, size: 11 });
+    s.addShape(pres.ShapeType.rect, { x: 3.86, y, w: 0.05, h: 0.86, fill: { color: C.yellow }, line: { width: 0 } });
+    h3(s, t, { x: 4.14, y: y + 0.02, w: 3.8, size: 13 });
+    body(s, d, { x: 4.14, y: y + 0.34, w: 3.85, h: 0.5, size: 11 });
   });
 
-  shot(s, "graph", { x: 8.5, y: 2.94, w: 4.2 });
-  body(s, "The chain, drawn live — each stage lights as the work reaches it.", { x: 8.5, y: 4.4, w: 4.2, h: 0.5, size: 10.5 });
+  const gh = figure(s, "graph", { x: 8.2, y: 2.9, w: 4.32, label: "The chain, drawn live" });
+  card(s, { x: 8.2, y: 2.9 + gh + 0.22, w: 4.32, h: 1.28, accent: true });
+  h3(s, "Nothing taken on faith", { x: 8.52, y: 3.16 + gh + 0.22, w: 3.7, size: 13.5 });
+  body(s, "Each stage lights only once the work has actually reached it — the picture follows the run, not a script.",
+    { x: 8.52, y: 3.5 + gh + 0.22, w: 3.7, h: 0.62, size: 10.5 });
 
   s.addNotes("In a category whose entire barrier is trust, showing the working is not decoration — it is the mechanism.");
 }
@@ -517,7 +560,7 @@ function table(s, rows, { x, y, w, colW, fontSize = 11 }) {
 
 /* ═════════════ 13 · THE MARKET ═════════════ */
 {
-  const s = slide("The market", "Everyone is building the diagnosis. Few will touch anything.");
+  const s = slide("The market", "Everyone builds the diagnosis. Few will act.");
 
   table(s, [
     [hdr("Who"), hdr("What they sell"), hdr("Where we sit")],

@@ -45,9 +45,25 @@ for (const [i, entry] of slides.entries()) {
     if (/rot="/.test(sp)) continue;             // rotated beams are decorative
 
     boxes.push({
+      kind: "text",
       x: +off[1] / EMU, y: +off[2] / EMU,
       w: +ext[1] / EMU, h: +ext[2] / EMU,
       label: texts.slice(0, 38),
+    });
+  }
+
+  /* Images too. This is the check that was missing, and it is the one that mattered: text laid
+     over a screenshot passed silently because only text was ever compared against text. A
+     caption belongs beside or beneath a picture, never on top of one. */
+  for (const pic of xml.split("<p:pic>").slice(1)) {
+    const off = pic.match(/<a:off x="(-?\d+)" y="(-?\d+)"\/>/);
+    const ext = pic.match(/<a:ext cx="(\d+)" cy="(\d+)"\/>/);
+    if (!off || !ext) continue;
+    boxes.push({
+      kind: "image",
+      x: +off[1] / EMU, y: +off[2] / EMU,
+      w: +ext[1] / EMU, h: +ext[2] / EMU,
+      label: "[image]",
     });
   }
 
@@ -66,12 +82,14 @@ for (const [i, entry] of slides.entries()) {
   for (let a = 0; a < boxes.length; a++) {
     for (let c = a + 1; c < boxes.length; c++) {
       const p = boxes[a], q = boxes[c];
+      if (p.kind === "image" && q.kind === "image") continue;   // two pictures never share a slot
       const ox = Math.min(p.x + p.w, q.x + q.w) - Math.max(p.x, q.x);
       const oy = Math.min(p.y + p.h, q.y + q.h) - Math.max(p.y, q.y);
       if (ox > 0.06 && oy > 0.06) {
         collisions++;
+        const kind = p.kind === "image" || q.kind === "image" ? "TEXT ON IMAGE" : "TEXT OVERLAP";
         console.log(
-          `  slide ${String(i + 1).padStart(2)} TEXT OVERLAP ${ox.toFixed(2)}"x${oy.toFixed(2)}"` +
+          `  slide ${String(i + 1).padStart(2)} ${kind} ${ox.toFixed(2)}"x${oy.toFixed(2)}"` +
           `  — "${p.label}"  vs  "${q.label}"`
         );
       }
