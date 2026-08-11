@@ -105,6 +105,51 @@ const ASSETS = [
     },
   },
   {
+    // The one asset worth driving the app for. A trace is the product's whole trust argument,
+    // and a screenshot of an empty console cannot make it — so this actually runs the agent
+    // and photographs what came back.
+    //
+    // The trace panel renders ~958px tall, past the fold, so these use a taller page and cap
+    // the height: the first few tool calls make the point, and a full-length column would be
+    // unreadable at slide scale anyway.
+    name: "run", url: "/run?tab=health", pad: 0, runAgent: true, viewport: { width: 1440, height: 1500 },
+    find: () => {
+      const panels = [...document.querySelectorAll(".panel-deep")];
+      const t = panels.find((e) => e.innerText.startsWith("Reasoning trace"));
+      const r = panels.find((e) => e.innerText.startsWith("Health report"));
+      const a = t.getBoundingClientRect(), b = r.getBoundingClientRect();
+      return { x: a.x, y: a.y, width: b.right - a.left, height: Math.min(b.height, 470) };
+    },
+  },
+  {
+    name: "trace", url: "/run?tab=health", pad: 0, runAgent: true, viewport: { width: 1440, height: 1500 },
+    // The tools it chose, in the order it chose them.
+    find: () => {
+      const t = [...document.querySelectorAll(".panel-deep")].find((e) => e.innerText.startsWith("Reasoning trace"));
+      const r = t.getBoundingClientRect();
+      return { x: r.x, y: r.y, width: r.width, height: Math.min(r.height, 560) };
+    },
+  },
+  {
+    name: "report", url: "/run?tab=health", pad: 0, runAgent: true, viewport: { width: 1440, height: 1500 },
+    // The verdict: one word, colour-coded, with the reasoning beneath it.
+    find: () => {
+      const r = [...document.querySelectorAll(".panel-deep")].find((e) => e.innerText.startsWith("Health report"));
+      return r.getBoundingClientRect();
+    },
+  },
+  {
+    name: "activity", url: "/activity", pad: 10,
+    // The record: what ran, when, and how it resolved.
+    find: () => {
+      const seed = [...document.querySelectorAll("*")].find((e) => /Operational rhythms/.test(e.textContent) && e.children.length);
+      let el = seed;
+      while (el && el.getBoundingClientRect().width < 1100) el = el.parentElement;
+      const r = el.getBoundingClientRect();
+      return { x: r.x, y: r.y, width: r.width, height: Math.min(r.height, 330) };
+    },
+  },
+  {
     name: "fleetgrid", url: "/agents", pad: 10,
     // The top row of agent tiles. Walk up from one card until the ancestor holds all three
     // live agents — that ancestor is the grid, whatever classes it happens to carry.
@@ -124,9 +169,18 @@ const ASSETS = [
 
 const measured = {};
 for (const a of ASSETS) {
+  await page.setViewportSize(a.viewport ?? { width: 1440, height: 900 });
   await page.goto(BASE + a.url, LOAD);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(2600);
+
+  if (a.runAgent) {
+    // Drive a real run. Groq answers a seven-tool health check in a few seconds, so the wait
+    // is generous rather than optimistic — a half-rendered trace is worse than no screenshot.
+    await page.getByRole("button", { name: /^Run$/ }).click({ force: true });
+    await page.waitForFunction(() => /HEALTHY|WARNING|CRITICAL/.test(document.body.innerText), null, { timeout: 120_000 });
+    await page.waitForTimeout(3200);
+  }
 
   if (a.scrollTo) {
     await page.evaluate((needle) => {

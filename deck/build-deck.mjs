@@ -1,7 +1,7 @@
 /** Builds the Aurora Ops deck.
  *
  * Structure follows the five sections asked for, in order, and stops at eight slides:
- * problem, solution, features, snapshots, stack and data flow, outcomes, close.
+ * problem, solution, features, snapshots, inside a run, stack and data flow, outcomes, close.
  *
  * Three rules this rebuild is written against, all of them corrections:
  *
@@ -36,7 +36,7 @@ const C = {
   grey: "C7C7D0",
   muted: "9494A2",
 };
-const F = { head: "Arial", body: "Arial" };
+const F = { head: "Arial", body: "Arial", mono: "Consolas" };
 
 /** True aspect ratios, printed by prep-shots.mjs when it captured each element. Images are
  *  placed by width and the height derived, so nothing is ever squashed. */
@@ -48,6 +48,10 @@ const AR = {
   chart: 1.9608,
   graph: 1.8176,
   fleetgrid: 3.7742,
+  run: 5.7667,
+  trace: 2.62,
+  report: 2.275,
+  activity: 4.1714,
 };
 
 const img = (n) => ({ data: "image/png;base64," + readFileSync(resolve(HERE, "img", n + ".png")).toString("base64") });
@@ -61,13 +65,22 @@ pres.title = "Aurora Ops — Agentic IT Operations";
 
 /** Identical on every content slide: yellow rule, eyebrow, title. Consistency here is most of
  *  what makes a deck read as designed rather than assembled. */
+let page = 1;   // the title slide is 01 and carries no footer
 function slide(eyebrow, title, opts = {}) {
   const s = pres.addSlide();
   s.background = { color: C.bg };
   s.addShape(pres.ShapeType.rect, { x: 0.62, y: 0.44, w: 0.6, h: 0.085, fill: { color: C.yellow }, line: { width: 0 } });
   s.addText(eyebrow.toUpperCase(), {
     x: 0.62, y: 0.62, w: 9, h: 0.26, margin: 0,
-    fontFace: F.body, fontSize: 11, bold: true, color: C.yellow, charSpacing: 2.6,
+    fontFace: F.mono, fontSize: 11, bold: true, color: C.yellow, charSpacing: 2.6,
+  });
+  // Numbered footer. Mono, hairline, bottom-right — a small recurring mark that says the deck
+  // has a system rather than a set of one-off layouts.
+  page += 1;
+  s.addShape(pres.ShapeType.line, { x: 12.06, y: 7.02, w: 0.42, h: 0, line: { color: C.yellow, width: 1.25 } });
+  s.addText(String(page).padStart(2, "0"), {
+    x: 11.9, y: 7.08, w: 0.75, h: 0.24, margin: 0,
+    fontFace: F.mono, fontSize: 10, color: C.muted, align: "right",
   });
   s.addText(title, {
     x: 0.6, y: 0.94, w: opts.titleW ?? 12.1, h: 0.66, margin: 0,
@@ -101,7 +114,7 @@ function node(s, { x, y, w, h, title, sub, on = false }) {
   if (sub) {
     s.addText(sub, {
       x: x + 0.1, y: y + 0.58, w: w - 0.2, h: 0.46, margin: 0,
-      fontFace: F.body, fontSize: 9.5, color: on ? C.bg : C.muted, align: "center", lineSpacing: 12,
+      fontFace: F.mono, fontSize: 9, color: on ? C.bg : C.muted, align: "center", lineSpacing: 12,
     });
   }
 }
@@ -146,7 +159,7 @@ function shot(s, name, { x, y, w, h, label }) {
   if (label) {
     s.addText(label.toUpperCase(), {
       x: x + 0.16, y: y + h - 0.34, w: w - 0.32, h: 0.24, margin: 0,
-      fontFace: F.body, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.6,
+      fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2,
     });
   }
   return h;
@@ -275,7 +288,7 @@ function shot(s, name, { x, y, w, h, label }) {
 {
   const s = slide("Application snapshots", "The running product");
 
-  const BW = 5.9, BH = 2.5, GX = 0.3, GY = 0.2, X0 = 0.62, Y0 = 1.9;
+  const BW = 5.9, BH = 2.42, GX = 0.3, GY = 0.2, X0 = 0.62, Y0 = 1.9;
   const cell = (c, r) => ({ x: X0 + c * (BW + GX), y: Y0 + r * (BH + GY), w: BW, h: BH });
 
   shot(s, "console",   { ...cell(0, 0), label: "Run an agent — ask on the left, watch on the right" });
@@ -286,7 +299,23 @@ function shot(s, name, { x, y, w, h, label }) {
   s.addNotes("Four screens, no commentary needed. If asked to demo live, open the console one and run System Health — it returns in under four seconds.");
 }
 
-/* ══════════════════════════ 6 — TECHNOLOGY STACK AND DATA FLOW ══════════════════════════ */
+/* ══════════════════════════ 6 — INSIDE A RUN ══════════════════════════ */
+{
+  const s = slide("Inside a run", "Nothing is hidden");
+  lede(s, "A real System Health run, captured from the product. Every tool it chose, what each returned, and the verdict it reached.", { w: 11.4 });
+
+  const BW = 5.9, BH = 2.14, GX = 0.3, GY = 0.18, X0 = 0.62, Y0 = 2.44;
+  const cell = (c, r) => ({ x: X0 + c * (BW + GX), y: Y0 + r * (BH + GY), w: BW, h: BH });
+
+  shot(s, "trace",    { ...cell(0, 0), label: "The plan, then every tool call and its result" });
+  shot(s, "report",   { ...cell(1, 0), label: "The verdict — one word, colour-coded" });
+  shot(s, "activity", { ...cell(0, 1), label: "Every run recorded and scored" });
+  shot(s, "prompts",  { ...cell(1, 1), label: "Symptoms, not agent names" });
+
+  s.addNotes("This is the trust slide. The numbers on it are from a genuine run on this laptop — CPU 92.5%, memory 85.3% — not a mockup. If anyone asks whether the output is real, this is the answer.");
+}
+
+/* ══════════════════════════ 7 — TECHNOLOGY STACK AND DATA FLOW ══════════════════════════ */
 {
   const s = slide("Technology stack and data flow", "How a request becomes a verified report");
 
@@ -311,7 +340,7 @@ function shot(s, name, { x, y, w, h, label }) {
   s.addShape(pres.ShapeType.line, { x: 8.0, y: 3.42, w: 0, h: 0.34, line: { color: C.yellow, width: 1.5, endArrowType: "triangle" } });
   s.addText("repeats until the agent has seen enough", {
     x: 7.4, y: 3.82, w: 3.9, h: 0.28, margin: 0,
-    fontFace: F.body, fontSize: 10.5, color: C.yellow, align: "center",
+    fontFace: F.mono, fontSize: 10, color: C.yellow, align: "center",
   });
 
   const cols = [
@@ -324,11 +353,11 @@ function shot(s, name, { x, y, w, h, label }) {
     card(s, { x, y: 4.46, w: 3.72, h: 1.86, accent: true });
     s.addText(t.toUpperCase(), {
       x: x + 0.34, y: y0(4.46) + 0.26, w: 3.1, h: 0.28, margin: 0,
-      fontFace: F.body, fontSize: 10.5, bold: true, color: C.yellow, charSpacing: 1.8,
+      fontFace: F.mono, fontSize: 10.5, bold: true, color: C.yellow, charSpacing: 1.8,
     });
     s.addText(b, {
       x: x + 0.34, y: y0(4.46) + 0.62, w: 3.14, h: 1.0, margin: 0,
-      fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 17,
+      fontFace: F.mono, fontSize: 11.5, color: C.grey, lineSpacing: 17,
     });
   });
   function y0(v) { return v; }
@@ -336,7 +365,7 @@ function shot(s, name, { x, y, w, h, label }) {
   s.addNotes("The loop is the part worth explaining: the agent is not a pipeline, it goes round between reasoning and tools until it has what it needs, then writes the report.");
 }
 
-/* ══════════════════════════ 7 — OUTCOMES AND IMPACT ══════════════════════════ */
+/* ══════════════════════════ 8 — OUTCOMES AND IMPACT ══════════════════════════ */
 {
   const s = slide("Outcomes and impact", "What changes when judgement is automated");
 
@@ -355,7 +384,7 @@ function shot(s, name, { x, y, w, h, label }) {
     if (!h) return;
     s.addText(h.toUpperCase(), {
       x: colX[i], y: 2.0, w: colW[i], h: 0.26, margin: 0,
-      fontFace: F.body, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
+      fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
     });
   });
   rows.forEach((r, ri) => {
@@ -374,7 +403,7 @@ function shot(s, name, { x, y, w, h, label }) {
   // Measured on this machine, and said so.
   s.addText("MEASURED ON THIS MACHINE", {
     x: 0.62, y: 4.94, w: 5, h: 0.24, margin: 0,
-    fontFace: F.body, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
+    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
   });
   const runs = [
     ["1.4s", "targeted question\n2 tool calls"],
@@ -387,7 +416,7 @@ function shot(s, name, { x, y, w, h, label }) {
   card(s, { x: 8.62, y: 1.94, w: 4.1, h: 4.62, accent: true });
   s.addText("TIME TO A VERIFIED ANSWER", {
     x: 8.96, y: 2.22, w: 3.5, h: 0.26, margin: 0,
-    fontFace: F.body, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
+    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
   });
 
   s.addText("Manual", { x: 8.96, y: 2.64, w: 1.6, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11, color: C.grey });
@@ -408,7 +437,7 @@ function shot(s, name, { x, y, w, h, label }) {
   s.addNotes("Be straight about the arithmetic: the run times are measured, the 35-minute baseline is an assumption and is printed on the slide as one. If they push, offer to re-run the model with their own number.");
 }
 
-/* ══════════════════════════ 8 — CLOSE ══════════════════════════ */
+/* ══════════════════════════ 9 — CLOSE ══════════════════════════ */
 {
   const s = slide("Where this goes", "Working today, and what comes next");
 
@@ -428,7 +457,7 @@ function shot(s, name, { x, y, w, h, label }) {
     card(s, { x, y: 2.1, w: 5.83, h: 3.3, accent: on });
     s.addText(title.toUpperCase(), {
       x: x + 0.36, y: 2.4, w: 4.9, h: 0.28, margin: 0,
-      fontFace: F.body, fontSize: 10.5, bold: true, color: on ? C.yellow : C.muted, charSpacing: 1.8,
+      fontFace: F.mono, fontSize: 10.5, bold: true, color: on ? C.yellow : C.muted, charSpacing: 1.8,
     });
     items.forEach((t, i) => {
       const y = 2.9 + i * 0.72;
@@ -442,11 +471,24 @@ function shot(s, name, { x, y, w, h, label }) {
 
   s.addText("github.com/Mr-Bathwal/aurora-ops-frontend   ·   github.com/Mr-Bathwal/aurora-ops-hub", {
     x: 0.62, y: 6.06, w: 11.9, h: 0.32, margin: 0,
-    fontFace: F.body, fontSize: 11.5, color: C.muted,
+    fontFace: F.mono, fontSize: 11, color: C.muted,
   });
   s.addNotes("Close on the 'next' column — correlation across machines is the honest gap, and naming it first is stronger than being asked about it.");
 }
 
-const OUT = resolve(HERE, "Aurora-Ops-Overview.pptx");
-await pres.writeFile({ fileName: OUT });
-console.log("wrote", OUT);
+/* Writing over a deck that is open in PowerPoint fails with EBUSY, which used to kill the
+   build outright and leave the previous file in place — so a "clean" check could then be
+   reporting on a stale deck. Fall back to a side file and say so loudly instead. */
+const OUT = resolve(HERE, process.argv[2] ?? "Aurora-Ops-Overview.pptx");
+try {
+  await pres.writeFile({ fileName: OUT });
+  console.log("wrote", OUT);
+} catch (err) {
+  if (err?.code !== "EBUSY") throw err;
+  const ALT = resolve(HERE, "Aurora-Ops-Overview.new.pptx");
+  await pres.writeFile({ fileName: ALT });
+  console.log(`
+  ${OUT.split(/[\/]/).pop()} is open in PowerPoint, so it could not be replaced.`);
+  console.log(`  Wrote ${ALT.split(/[\/]/).pop()} instead — close the deck and re-run to swap it in.
+`);
+}
