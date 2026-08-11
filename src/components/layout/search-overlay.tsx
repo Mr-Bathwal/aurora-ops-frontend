@@ -2,25 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Activity, Database, FileText, LayoutDashboard, RefreshCw, Search, Sparkles, X } from "lucide-react";
+import { HeartPulse, FileText, Database, LayoutDashboard, RefreshCw, Sparkles, Activity, Search, X } from "lucide-react";
+import type { IconType } from "@/lib/icon-type";
 
 interface OverlayItem {
   label: string;
-  icon: typeof LayoutDashboard;
+  icon: IconType;
   href: string;
   tag?: string;
 }
 
 const AGENT_ITEMS: OverlayItem[] = [
-  { label: "Run System Health", icon: Activity,  href: "/run?tab=health&autorun=1", tag: "→ cpu·mem·disk" },
-  { label: "Run Log Analyzer",  icon: FileText,  href: "/run?tab=log&autorun=1",    tag: "→ error scan" },
-  { label: "Run Backup & DR",   icon: Database,  href: "/run?tab=backup&autorun=1", tag: "→ protect data" },
-  { label: "Auto-remediate",    icon: RefreshCw, href: "/auto-remediate",           tag: "→ self-heal" },
+  { label: "Run System Health", icon: HeartPulse, href: "/run?tab=health&autorun=1", tag: "→ cpu·mem·disk" },
+  { label: "Run Log Analyzer",  icon: FileText,    href: "/run?tab=log&autorun=1",    tag: "→ error scan" },
+  { label: "Run Backup & DR",   icon: Database,    href: "/run?tab=backup&autorun=1", tag: "→ protect data" },
+  { label: "Auto-remediate",    icon: RefreshCw,   href: "/auto-remediate",           tag: "→ self-heal" },
 ];
 
 const NAV_ITEMS: OverlayItem[] = [
   { label: "Dashboard",         icon: LayoutDashboard, href: "/" },
-  { label: "Smart orchestrator",icon: Sparkles,        href: "/orchestrator" },
+  { label: "Smart orchestrator",icon: Sparkles,        href: "/run?tab=orchestrator" },
   { label: "Activity & audit",  icon: Activity,        href: "/activity" },
 ];
 
@@ -35,7 +36,7 @@ function GlowItem({ item, onSelect }: { item: OverlayItem; onSelect: () => void 
       className="group relative w-full overflow-hidden rounded-xl px-5 py-3.5 text-left transition-all duration-200"
       style={{
         background: hovered
-          ? "linear-gradient(90deg, transparent 0%, rgba(124,107,255,0.18) 30%, rgba(63,208,224,0.14) 70%, transparent 100%)"
+          ? "linear-gradient(90deg, transparent 0%, rgba(62,156,255,0.18) 30%, rgba(62,156,255,0.14) 70%, transparent 100%)"
           : "transparent",
       }}
       onMouseEnter={() => setHovered(true)}
@@ -44,20 +45,20 @@ function GlowItem({ item, onSelect }: { item: OverlayItem; onSelect: () => void 
     >
       {/* Left gradient fade on hover */}
       {hovered && (
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-8" style={{ background: "linear-gradient(90deg, transparent, rgba(124,107,255,0.06))" }} />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-8" style={{ background: "linear-gradient(90deg, transparent, rgba(52,245,197,0.06))" }} />
       )}
       {/* Right gradient fade on hover */}
       {hovered && (
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-8" style={{ background: "linear-gradient(270deg, transparent, rgba(63,208,224,0.06))" }} />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8" style={{ background: "linear-gradient(270deg, transparent, rgba(0,240,255,0.06))" }} />
       )}
 
       <div className="relative flex items-center gap-3">
-        <Icon className="size-4 shrink-0 transition-colors" style={{ color: hovered ? "#A99BFF" : "#5C6582" }} />
+        <Icon className="shrink-0 transition-colors" size={17} style={{ color: hovered ? "#2f7fe0" : "#5C6582" }} />
         <span className="flex-1 font-medium transition-colors" style={{ color: hovered ? "#EDEFF7" : "#969DB4" }}>
           {item.label}
         </span>
         {item.tag && (
-          <span className="font-mono text-[10px] transition-colors" style={{ color: hovered ? "#3FD0E0" : "#3a3f55" }}>
+          <span className="font-mono text-[10px] transition-colors" style={{ color: hovered ? "#34F5C5" : "#3a3f55" }}>
             {item.tag}
           </span>
         )}
@@ -66,41 +67,9 @@ function GlowItem({ item, onSelect }: { item: OverlayItem; onSelect: () => void 
   );
 }
 
-const TYPING_HINTS = [
-  "search system health...",
-  "run log analyzer...",
-  "check backup status...",
-  "auto diagnose & fix...",
-  "describe a problem...",
-  "view recent activity...",
-];
-
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
-  const [placeholder, setPlaceholder] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const hintIdx = useRef(0);
-  const charIdx = useRef(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    function typeNext() {
-      const hint = TYPING_HINTS[hintIdx.current];
-      if (charIdx.current <= hint.length) {
-        setPlaceholder(hint.slice(0, charIdx.current));
-        charIdx.current++;
-        timer.current = setTimeout(typeNext, charIdx.current === 1 ? 400 : 45);
-      } else {
-        timer.current = setTimeout(() => {
-          hintIdx.current = (hintIdx.current + 1) % TYPING_HINTS.length;
-          charIdx.current = 0;
-          typeNext();
-        }, 1200);
-      }
-    }
-    typeNext();
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -131,17 +100,17 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
     >
       {/* Search input — floating, no box */}
       <div className="relative w-full max-w-xl px-4">
-        <Search className="absolute left-8 top-1/2 size-4 -translate-y-1/2 text-faint" />
+        <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-faint" size={17} />
         <input
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder + "▌"}
-          className="w-full rounded-2xl bg-transparent py-4 pl-12 pr-12 text-[15px] text-foreground placeholder:text-faint focus:outline-none"
-          style={{ border: "1px solid rgba(124,107,255,0.4)", boxShadow: "0 0 30px rgba(124,107,255,0.12)" }}
+          placeholder="Search agents, runs, activity…"
+          className="w-full rounded-[20px] bg-transparent py-4 pl-12 pr-12 text-[14px] text-foreground placeholder:text-faint focus:outline-none"
+          style={{ border: "1px solid rgba(62,156,255,0.4)", boxShadow: "0 0 30px rgba(52,245,197,0.12)" }}
         />
         <button type="button" onClick={onClose} title="Close search" aria-label="Close search" className="absolute right-8 top-1/2 -translate-y-1/2 text-faint hover:text-foreground">
-          <X className="size-4" />
+          <X size={17} />
         </button>
       </div>
 
@@ -149,7 +118,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
       <div className="mt-8 grid w-full max-w-2xl grid-cols-2 gap-2 px-4">
         {/* Column 1: Run agents */}
         <div>
-          <div className="mb-2 px-5 font-mono text-[9.5px] uppercase tracking-[0.2em] text-iris/60">Run agents</div>
+          <div className="mb-2 px-5 font-mono text-[9.5px] uppercase tracking-[0.2em] text-brand/60">Run agents</div>
           {filteredAgents.map((item) => (
             <GlowItem key={item.href} item={item} onSelect={onClose} />
           ))}

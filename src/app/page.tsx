@@ -1,102 +1,84 @@
-"use client";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Hero } from "@/components/home/hero";
+import { FleetConstellation } from "@/components/home/fleet-constellation";
+import { OutcomeRing } from "@/components/home/outcome-ring";
+import { DesignedFor } from "@/components/home/designed-for";
+import { StepFlow } from "@/components/home/step-flow";
+import { FinalCta } from "@/components/home/final-cta";
+import { SectionHeading } from "@/components/aurora/section-heading";
+import { SectionBand } from "@/components/aurora/section-band";
 
-import { useEffect, useRef, useState } from "react";
-import { VitalsHero } from "@/components/dashboard/vitals-hero";
-import { OrchestrationShowcase } from "@/components/three/orchestration/orchestration-showcase";
-import { RobotAgent } from "@/components/dashboard/robot-agent";
-import { OperatorRobot } from "@/components/dashboard/operator-robot";
-import { DoNotPress } from "@/components/dashboard/do-not-press";
-import { SectionLabel } from "@/components/aurora/section-label";
-import { useInView } from "@/hooks/use-in-view";
-
-/*
-  Intro step machine — INFINITE LOOP, scroll-triggered, PAUSED while any robot is hovered:
-
-    0  robot-1 (health)      3.5 s
-    1  robot-2 (log)         3.5 s
-    2  robot-3 (backup)      3.5 s
-    3  operator left only    3.0 s
-    4  operator both         4.0 s
-    → restart (≈ 17.5 s total cycle)
-
-  Auto intro clouds are suppressed the moment anyHovered=true.
-*/
-
+/** The landing page, built to the reference's section storyboard.
+ *
+ * Every block below the hero is a full-bleed band that announces itself with the same
+ * centred, shimmer heading, and the bands alternate between the near-black floor and the
+ * raised surface so the page reads as chapters rather than one scroll. The old page stacked
+ * differently-styled sections with tiny left-aligned labels; the whole point of this pass is
+ * that the sections now share a single grammar with the hero and with each other.
+ *
+ * The left-aligned SectionLabels and the vertical "anchor" threads are gone: the reference's
+ * cohesion comes from that shared heading grammar and the consistent rhythm, not from drawn
+ * connectors between blocks.
+ */
 export default function DashboardPage() {
-  const [introStep, setIntroStep] = useState(-1);
-  const [anyHovered, setAnyHovered] = useState(false);
-  const { ref: agentsSectionRef, inView: agentsInView } = useInView<HTMLDivElement>(0.2);
-  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  /* Debounced hover tracking so moving between robots doesn't flicker the intro off */
-  function onZoneEnter() {
-    if (leaveTimer.current) { clearTimeout(leaveTimer.current); leaveTimer.current = null; }
-    setAnyHovered(true);
-  }
-  function onZoneLeave() {
-    leaveTimer.current = setTimeout(() => { setAnyHovered(false); leaveTimer.current = null; }, 150);
-  }
-
-  /* Infinite intro loop — starts on first scroll into view */
-  useEffect(() => {
-    if (!agentsInView) return;
-
-    let active = true;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    function startCycle() {
-      timers.forEach(clearTimeout);
-      timers.length = 0;
-      if (!active) return;
-
-      timers.push(setTimeout(() => { if (active) setIntroStep(0); },     0));
-      timers.push(setTimeout(() => { if (active) setIntroStep(1); },  3500));
-      timers.push(setTimeout(() => { if (active) setIntroStep(2); },  7000));
-      timers.push(setTimeout(() => { if (active) setIntroStep(3); }, 11000));
-      timers.push(setTimeout(() => { if (active) setIntroStep(4); }, 14000));
-      timers.push(setTimeout(() => { if (active) startCycle();    }, 17500));
-    }
-
-    startCycle();
-    return () => { active = false; timers.forEach(clearTimeout); };
-  }, [agentsInView]);
-
-  /* When any robot is hovered, suppress intro clouds — loop timer keeps running
-     but introActive props are all false, so no intro cloud appears. */
-  const step = anyHovered ? -1 : introStep;
-
   return (
-    <div className="space-y-2">
+    <>
+      <Hero />
 
-      <VitalsHero />
+      {/* Who it's for. Floor tone: the diagram is a dark space scene and wants the page's own
+          near-black behind it, not a raised plate. */}
+      <SectionBand tone="floor">
+        <DesignedFor />
+      </SectionBand>
 
-      <SectionLabel>Live orchestration</SectionLabel>
-      <OrchestrationShowcase />
+      {/* The fleet — the reference's feature grid. */}
+      <SectionBand tone="raised">
+        <SectionHeading
+          eyebrow="Deployed sentinels"
+          sub="Each one owns a corner of the stack — watching, reading, and acting the moment its patch of the world goes wrong."
+        >
+          Meet the fleet that never sleeps.
+        </SectionHeading>
 
-      {/* All robots wrapped in ONE hover zone — cursor on any robot hides ALL intros */}
-      <div
-        ref={agentsSectionRef}
-        onMouseEnter={onZoneEnter}
-        onMouseLeave={onZoneLeave}
-      >
-        <SectionLabel className="mt-10">Specialist agents</SectionLabel>
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-          <RobotAgent agentKey="health" introActive={step === 0} />
-          <RobotAgent agentKey="log"    introActive={step === 1} />
-          <RobotAgent agentKey="backup" introActive={step === 2} />
+        <div className="mt-16">
+          <FleetConstellation />
         </div>
 
-        {/* OperatorRobot inside the same hover zone */}
-        <OperatorRobot
-          leftActive={step === 3 || step === 4}
-          rightActive={step === 4}
-        />
-      </div>
+        {/* The reference closes this composition with a 3rem spacer before its last line;
+            here that gap sits between the constellation and the way through to the roster. */}
+        <div className="mt-12 flex justify-center">
+          <Link
+            href="/agents"
+            className="group inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+          >
+            View the whole fleet
+            <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+      </SectionBand>
 
-      <div className="mt-20 border-t border-border/20">
-        <DoNotPress />
-      </div>
+      {/* How it works. Floor tone is not a choice — the step card *is* `--bg-2`, so on a
+          raised band it would be the same colour as the band it sits on and survive only as
+          an outline. The reference does the same thing: its card is #0c0f14 on a #050707
+          body. Everything below shifts a tone to keep the alternation going. */}
+      <SectionBand tone="floor" className="steps-glass">
+        <StepFlow />
+      </SectionBand>
 
-    </div>
+      {/* The outcome. Pure black rather than a tone from the ramp: both pieces of art here
+          composite with `mix-blend-mode: screen` and were floored to true black on export, so
+          on #000 they leave the band untouched and read as light with no plate under them. */}
+      <SectionBand tone="floor" className="bg-black">
+        <OutcomeRing />
+      </SectionBand>
+
+      {/* The close. `-mb-36` cancels the shell's `pb-36`: main pads its bottom for the ordinary
+          content pages, but a full-bleed band has already carried its own `py-24`, so that
+          padding would land as a strip of page floor between the last band and the footer. */}
+      <SectionBand tone="raised" className="-mb-36">
+        <FinalCta />
+      </SectionBand>
+    </>
   );
 }

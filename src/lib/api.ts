@@ -49,7 +49,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(path, 0, `Can't reach the backend at ${API_URL}. Is it running?`);
   }
   if (!res.ok) {
-    throw new ApiError(path, res.status, `${path} failed with ${res.status} ${res.statusText}`);
+    // Prefer the server's own explanation. FastAPI puts it in `detail`, and for the failures
+    // an operator actually hits — the model provider's rate limit, a rejected tool call — it
+    // says what to do next, which `500 Internal Server Error` never does.
+    const detail = await res
+      .json()
+      .then((b) => (typeof b?.detail === "string" ? b.detail : null))
+      .catch(() => null);
+    throw new ApiError(path, res.status, detail ?? `${path} failed with ${res.status} ${res.statusText}`);
   }
   return res.json();
 }
@@ -65,7 +72,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ request: userRequest }),
     }),
-  autoRemediate: () => request<AutoRemediateResult>("/api/auto-remediate", { method: "POST" }),
+  /** `userRequest` steers the chain: it reaches the Log Analyzer's brief and the router that
+   *  decides whether Backup & DR runs. Omitting it runs the default sweep. */
+  autoRemediate: (userRequest?: string) =>
+    request<AutoRemediateResult>("/api/auto-remediate", {
+      method: "POST",
+      body: JSON.stringify({ request: userRequest ?? null }),
+    }),
 };
 
 export { ApiError };

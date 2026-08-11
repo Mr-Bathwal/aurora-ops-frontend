@@ -7,8 +7,20 @@
 /* ============ AURORA OPS theme tokens ============ */
 @theme inline {
   --font-sans: var(--font-inter);
-  --font-heading: var(--font-sora);
+  --font-heading: var(--font-manrope);
   --font-mono: var(--font-jetbrains-mono);
+
+  /* The type scale, measured off the reference rather than invented per component.
+     Nine steps, and nothing between them — the sprawl of one-off `clamp()` values is what
+     made the old pages feel unrelated to each other even when each looked fine alone. */
+  --text-micro: 0.75rem;   /* 12 — legal, timestamps */
+  --text-small: 0.875rem;  /* 14 — the workhorse; most-used size on the reference */
+  --text-body: 1rem;       /* 16 — body copy */
+  --text-lead: 1.1875rem;  /* 19 — sub-headline */
+  --text-h4: 1.375rem;     /* 22 — small card titles */
+  --text-h3: 2rem;         /* 32 — feature titles */
+  --text-h2: 2.625rem;     /* 42 — section headings */
+  --text-h1: 4rem;         /* 64 — the one hero headline */
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -42,12 +54,12 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Aurora-specific accents, exposed as Tailwind utilities (bg-iris, text-cyan, etc.) */
+  /* Aurora-specific accents, exposed as Tailwind utilities (bg-brand, text-cyan, etc.) */
   --color-ink: var(--bg);
   --color-ink-2: var(--bg-2);
   --color-faint: var(--faint);
-  --color-iris: var(--iris);
-  --color-iris-2: var(--iris-2);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
   --color-cyan: var(--cyan);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-s);
@@ -56,32 +68,58 @@
   --color-crit: var(--crit);
   --color-crit-soft: var(--crit-s);
 
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-mint: var(--brand-2);
+
+  /* Three radii and a pill, not a ramp. The reference uses 8 / 20 / 90 and essentially
+     nothing else, and that restraint is a large part of why its cards read as one family. */
+  --radius-sm: 0.5rem;     /* 8 — inputs, chips */
+  --radius-md: 0.75rem;    /* 12 — nested panels */
+  --radius-lg: 1.25rem;    /* 20 — cards. The dominant radius on the reference */
+  --radius-xl: 1.75rem;    /* 28 — the big product frame */
+  --radius-2xl: 2.25rem;
+  --radius-pill: 90px;     /* every button and label on the reference */
 }
 
 :root {
-  /* raw Aurora Ops palette */
-  --bg: #08080e;
-  --bg-2: #0b0b14;
+  /* Palette measured off the reference build, not sampled from a screenshot.
+     Two accents and no more. Every previous revision of this file drifted because there was
+     always one more colour that seemed justified in isolation; the rule now is that if
+     something needs to stand out it earns it with weight, size or the mint — not a new hue.
+
+     Note the two darks are not interchangeable. #050707 is the page floor — what you see
+     where nothing is drawn. #0C0F14 is a *surface*: the reference uses it for section
+     blocks and cards, and its 4% blue is what makes those read as lit panels sitting on the
+     floor rather than as holes in it. Swapping them flattens the page. */
+  --bg: #050707;                /* page floor */
+  --bg-2: #0c0f14;              /* section blocks and raised panels */
+  --bg-3: #060a0d;
+  --surface: #1f242c;           /* card face */
+  --surface-2: #272d37;         /* raised nested panel */
+  --surface-mint: #142722;      /* the mint-tinted chip behind positive labels */
   --card-glass: rgba(255, 255, 255, 0.035);
   --card-glass-2: rgba(255, 255, 255, 0.06);
   --line: rgba(255, 255, 255, 0.09);
   --line-soft: rgba(255, 255, 255, 0.055);
-  --text: #edeff7;
-  --muted-text: #969db4;
-  --faint: #5c6582;
-  --iris: #7c6bff;
-  --iris-2: #a99bff;
-  --cyan: #3fd0e0;
-  --grad: linear-gradient(135deg, #8a78ff, #3fd0e0);
-  --grad-soft: linear-gradient(135deg, rgba(124, 107, 255, 0.16), rgba(63, 208, 224, 0.12));
-  --ok: #46e0a0;
-  --ok-s: rgba(70, 224, 160, 0.13);
+  --text: #f7f9fc;
+  --muted-text: #acb5c4;        /* the most-used colour on the reference, by a wide margin */
+  --faint: #55657a;
+  --brand: #3e9cff;             /* blue */
+  --brand-2: #34f5c5;           /* mint */
+  --cyan: #34f5c5;              /* retained alias so existing pages keep resolving */
+  --grad: linear-gradient(32deg, #3e9cff 40%, #34f5c5);
+  --grad-soft: linear-gradient(32deg, rgba(62, 156, 255, 0.16), rgba(52, 245, 197, 0.12));
+  /* Two headline gradients, both applied with background-clip:text + a transparent
+     text-fill. Read off the reference element by element rather than guessed.
+     --grad-h1 is the hero's: solidly white for the first third, then falling away to slate
+     across the rest, which is what dims the tail of each line without touching its opening.
+     --grad-text is what every section heading below the hero uses — symmetrical, so a
+     centred heading is lit in the middle and soft at both ends. */
+  --grad-h1: linear-gradient(107deg, #ffffff 36%, #55657a);
+  --grad-text: linear-gradient(80deg, #acb5c4, #ffffff 40%, #ffffff 60%, #acb5c4);
+  --ok: #34f5c5;                /* the reference makes mint do double duty as "good" */
+  --ok-s: rgba(52, 245, 197, 0.13);
   --warn: #ffc56b;
   --warn-s: rgba(255, 197, 107, 0.14);
   --crit: #ff6b81;
@@ -95,27 +133,27 @@
   --card-foreground: var(--text);
   --popover: #0e0e18;
   --popover-foreground: var(--text);
-  --primary: var(--iris);
-  --primary-foreground: #070810;
+  --primary: var(--brand);
+  --primary-foreground: #0c0f14;
   --secondary: var(--card-glass-2);
   --secondary-foreground: var(--text);
   --muted: var(--card-glass-2);
   --muted-foreground: var(--muted-text);
-  --accent: rgba(124, 107, 255, 0.16);
+  --accent: rgba(62, 156, 255, 0.16);
   --accent-foreground: var(--text);
   --destructive: var(--crit);
   --border: var(--line);
   --input: var(--line);
-  --ring: rgba(124, 107, 255, 0.55);
-  --chart-1: var(--iris);
+  --ring: rgba(62, 156, 255, 0.5);
+  --chart-1: var(--brand);
   --chart-2: var(--cyan);
   --chart-3: var(--ok);
   --chart-4: var(--warn);
   --chart-5: var(--crit);
-  --radius: 1rem;
+  --radius: 1.25rem;
   --sidebar: var(--bg-2);
   --sidebar-foreground: var(--text);
-  --sidebar-primary: var(--iris);
+  --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: #070810;
   --sidebar-accent: var(--card-glass-2);
   --sidebar-accent-foreground: var(--text);
@@ -141,8 +179,8 @@
     z-index: 0;
     pointer-events: none;
     background:
-      radial-gradient(58% 48% at 80% -6%, rgba(124, 107, 255, 0.17), transparent 70%),
-      radial-gradient(48% 42% at 10% 6%, rgba(63, 208, 224, 0.1), transparent 70%);
+      radial-gradient(58% 48% at 80% -6%, rgba(62, 156, 255, 0.17), transparent 70%),
+      radial-gradient(48% 42% at 10% 6%, rgba(52, 245, 197, 0.1), transparent 70%);
   }
   body::after {
     content: "";
@@ -155,7 +193,7 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   ::selection {
-    background: rgba(124, 107, 255, 0.3);
+    background: rgba(62, 156, 255, 0.3);
   }
 }
 
@@ -164,15 +202,15 @@
 /* Deep glass panel — overpowers matrix rain for clear result visibility */
 @utility panel-deep {
   background: rgba(4, 4, 16, 0.98);
-  border-color: rgba(124, 107, 255, 0.82);
+  border-color: rgba(62, 156, 255, 0.82);
   box-shadow:
-    0 0 0 1px rgba(63, 208, 224, 0.18),
-    0 0 28px rgba(124, 107, 255, 0.55),
-    0 0 70px rgba(124, 107, 255, 0.28),
-    0 0 140px rgba(63, 208, 224, 0.14),
+    0 0 0 1px rgba(52, 245, 197, 0.18),
+    0 0 28px rgba(62, 156, 255, 0.55),
+    0 0 70px rgba(62, 156, 255, 0.28),
+    0 0 140px rgba(52, 245, 197, 0.14),
     0 32px 90px rgba(0, 0, 0, 0.96),
-    inset 0 0 40px rgba(63, 208, 224, 0.05),
-    inset 0 1px 0 rgba(124, 107, 255, 0.25);
+    inset 0 0 40px rgba(52, 245, 197, 0.05),
+    inset 0 1px 0 rgba(62, 156, 255, 0.25);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
 }
@@ -192,6 +230,62 @@
   background-image: var(--grad-soft);
 }
 
+/* Hero headline scale — the one place type goes bigger than in-page headers */
+@utility text-hero {
+  font-size: clamp(2.75rem, 2vw + 2.25rem, 4.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism 2.0 — frosted-glass card material with a radial spotlight that tracks the
+   cursor via --spot-x/--spot-y (set per-element by useMousePosition, unlike `.spot` below
+   which is driven by a single document-level listener keyed off --mx/--my). */
+@utility glass-panel {
+  position: relative;
+  overflow: hidden;
+  /* --radius-lg, not --radius-2xl. At 36px this rounded harder than every other card on the
+     site (20px), so a glass panel sitting next to a sentinel card read as a different
+     component family. Cards share one radius. */
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 70px -24px rgba(0, 0, 0, 0.8);
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    background: radial-gradient(
+      380px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      rgba(52, 245, 197, 0.16),
+      transparent 65%
+    );
+  }
+  &:hover::before {
+    opacity: 1;
+  }
+  & > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Composites a full-bleed video/photo backdrop into the page's own --bg color so it
+   reads as atmosphere behind glass panels, not a foreign layer bolted on top. */
+@utility media-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.35) 0%, rgba(5, 5, 5, 0.8) 65%, var(--bg) 100%);
+  pointer-events: none;
+}
+
 @utility spot {
   position: relative;
   overflow: hidden;
@@ -203,7 +297,7 @@
     opacity: 0;
     transition: opacity 0.25s;
     pointer-events: none;
-    background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(124, 107, 255, 0.16), transparent 60%);
+    background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(62, 156, 255, 0.16), transparent 60%);
   }
   &:hover::before {
     opacity: 1;
@@ -255,6 +349,43 @@
   animation: aurora-drift 11s ease-in-out infinite alternate;
 }
 
+/* The steps band's backdrop.
+ *
+ * The reference paints this section with a bitmap — `background glass2.avif`, 1440×753 — and
+ * decoding it says it is nothing but three very soft lobes: neutral #e4e4e4 at 9%/0% and 4.3%
+ * alpha, blue #3babff at 77%/0% and 3.9%, mint #2ce2c9 at 62%/98% and 3.9%. Each one's alpha
+ * halves 17%, 17% and 14% of the width out from its peak, so the gradient radius is twice
+ * that — a CSS ramp is linear, and halves at half its radius.
+ *
+ * Rebuilt as gradients rather than shipping their file: it is their artwork, it re-themes
+ * with our tokens this way, and three radial-gradients weigh nothing next to an image
+ * request. Nobody is meant to *see* these — they are what stops the band reading as flat. */
+/* The slow drift of the plasma behind the closing CTA. 28s, because the whole illusion is
+ * light moving of its own accord — anything fast enough to track reads as a loading spinner
+ * and turns the button into something that looks busy rather than ready. */
+@keyframes aura-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility aura-spin {
+  animation: aura-spin 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aura-spin {
+    animation: none;
+  }
+}
+
+@utility steps-glass {
+  background-image:
+    radial-gradient(34% 60% at 9% 0%, rgba(228, 228, 228, 0.043), rgba(228, 228, 228, 0) 100%),
+    radial-gradient(34% 48% at 77% 0%, rgba(90, 200, 255, 0.039), rgba(90, 200, 255, 0) 100%),
+    radial-gradient(28% 54% at 62% 98%, rgba(52, 245, 197, 0.039), rgba(52, 245, 197, 0) 100%);
+}
+
 @keyframes aurora-rise {
   to {
     opacity: 1;
@@ -276,6 +407,31 @@
   }
 }
 
+/* The auto-remediate backdrop's slow breath. Scaled past 1 at both ends so the drift never
+   pulls a hard edge of the bitmap into frame, and slow enough (48s) that it reads as the room
+   being alive rather than as something moving. */
+@keyframes plexus-drift {
+  0% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.11) translate3d(-1.2%, -0.8%, 0);
+  }
+  100% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+}
+.plexus-drift {
+  animation: plexus-drift 48s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .plexus-drift {
+    animation: none;
+    transform: scale(1.06);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rise,
   [class*="rise-d"] {
@@ -287,93 +443,114 @@
 
 /* ============ Interactive effects ============ */
 
-/* Typewriter cursor */
-@keyframes blink-cursor {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* Brand easter egg */
-@keyframes egg-in {
-  from { opacity: 0; transform: scale(0.6) translateY(8px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-@keyframes egg-out {
-  from { opacity: 1; transform: scale(1) translateY(0); }
-  to   { opacity: 0; transform: scale(0.5) translateY(-12px); }
-}
-@keyframes wire-spark {
-  0%, 100% { opacity: 0.3; }
-  50%       { opacity: 1; }
-}
-
-/* DO NOT PRESS */
-@keyframes dnp-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,129,0.5), 0 0 20px rgba(255,107,129,0.2); }
-  50%       { box-shadow: 0 0 0 8px rgba(255,107,129,0), 0 0 40px rgba(255,107,129,0.35); }
-}
-
-/* Search item gradient fill on hover */
-@keyframes search-glow-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* Speaking cloud shimmer line */
-@keyframes scan-line {
-  from { transform: translateY(-100%); }
-  to   { transform: translateY(400%); }
-}
-
-/* Robot eye pulse */
-@keyframes eye-glow {
-  0%, 100% { opacity: 0.8; }
-  50%       { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
-}
-@keyframes eye-scan {
-  0%   { transform: translateX(-3px); }
-  50%  { transform: translateX(3px); }
-  100% { transform: translateX(-3px); }
-}
-
-/* Robot arm wave (CSS animation so no JS setState needed) */
-@keyframes arm-wave {
-  0%, 100% { transform: rotate(0deg); }
-  25%, 75% { transform: rotate(-30deg); }
-  50%       { transform: rotate(-5deg); }
-}
-.wave-arm {
-  transform-box: fill-box;
-  transform-origin: 100% 15%;
-  animation: arm-wave 0.6s ease-in-out infinite;
-}
-
-/* Particle linear electric spark */
-@keyframes spark-fade {
-  0%   { opacity: 1; }
-  100% { opacity: 0.2; }
-}
-
-
 @keyframes electric-dash {
   to { stroke-dashoffset: -9; }
+}
+/* The surge along an active orchestration connection. Paths are drawn agent -> hub, so a
+   decreasing offset pushes the dashes inward, reading as energy flowing to the router. */
+@keyframes orchestration-flow {
+  to { stroke-dashoffset: -140; }
 }
 @keyframes hover-ring-pulse {
   0%, 100% { opacity: 0.8; }
   50% { opacity: 0.3; }
 }
-@keyframes cursor-ripple {
-  from { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
-  to   { transform: translate(-50%, -50%) scale(4); opacity: 0; }
-}
 @keyframes flowing-border {
   from { background-position: 200% 0; }
   to   { background-position: -200% 0; }
 }
-@keyframes nav-shimmer {
-  0%   { opacity: 0; }
-  50%  { opacity: 1; }
-  100% { opacity: 0; }
+
+/* ============ Sentinel glyphs + card interactivity ============
+   The landing cards have to look alive standing still — someone scanning the page decides
+   whether this console is watching anything before they ever hover. These are the resting
+   animations for that: a heartbeat, a trace sweeping an ECG, storage rims lighting in
+   sequence, a shield catching light, and the flow that runs between the cards.
+
+   All of them are transform/opacity/stroke-dashoffset only, so they composite off the main
+   thread; none animate layout. The reduce-motion block at the end of this section turns the
+   whole set off rather than leaving a subset running. */
+
+@keyframes glyph-beat {
+  0%, 100% { transform: scale(1); }
+  10%      { transform: scale(1.085); }
+  20%      { transform: scale(1); }
+  30%      { transform: scale(1.05); }
+  42%      { transform: scale(1); }
+}
+/* The trace is drawn twice: a dim full-length path and this bright short dash riding along
+   it, which is what makes it read as a sweep rather than as a line that blinks. */
+@keyframes glyph-trace {
+  from { stroke-dashoffset: 150; }
+  to   { stroke-dashoffset: -150; }
+}
+@keyframes glyph-rim {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 1; }
+}
+@keyframes glyph-sheen {
+  0%       { transform: translateX(-46px); opacity: 0; }
+  12%      { opacity: 0.9; }
+  46%      { opacity: 0; }
+  100%     { transform: translateX(46px); opacity: 0; }
+}
+@keyframes glyph-scan {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(20px); }
+}
+
+/* The lower CTA on every card. Deliberately a ring that grows and fades rather than a
+   colour throb — the button keeps one legible resting state and the pulse happens outside
+   its edge, so the label never dims. */
+@keyframes cta-pulse {
+  0%   { opacity: 0.55; transform: scale(1); }
+  70%  { opacity: 0;    transform: scale(1.04); }
+  100% { opacity: 0;    transform: scale(1.04); }
+}
+@keyframes badge-throb {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 129, 0.42); }
+  60%      { box-shadow: 0 0 0 7px rgba(255, 107, 129, 0); }
+}
+/* Anchor connectors: a bright segment travelling along a dim rail from one block to the
+   next. Transform-only, so the travelling part composites and the rail itself never
+   repaints. The percentages are of the *segment*, not the rail, which is why the end value
+   looks so much larger than 100%. */
+@keyframes anchor-fall {
+  0%   { transform: translateY(-140%); opacity: 0; }
+  14%  { opacity: 1; }
+  78%  { opacity: 1; }
+  100% { transform: translateY(420%); opacity: 0; }
+}
+@keyframes anchor-slide {
+  0%   { transform: translateX(-140%); opacity: 0; }
+  18%  { opacity: 1; }
+  74%  { opacity: 1; }
+  100% { transform: translateX(320%); opacity: 0; }
+}
+@keyframes anchor-node {
+  0%, 100% { opacity: 0.45; box-shadow: 0 0 0 0 var(--accent); }
+  50%      { opacity: 1;    box-shadow: 0 0 0 5px transparent; }
+}
+
+.glyph-beat  { transform-box: fill-box; transform-origin: center; animation: glyph-beat 2.4s ease-in-out infinite; }
+.glyph-trace { animation: glyph-trace 2.4s linear infinite; }
+.glyph-sheen { transform-box: fill-box; animation: glyph-sheen 4.2s ease-in-out infinite; }
+.glyph-scan  { transform-box: fill-box; animation: glyph-scan 3.4s ease-in-out infinite; }
+.cta-pulse   { animation: cta-pulse 2.6s ease-out infinite; }
+.badge-throb { animation: badge-throb 2s ease-out infinite; }
+.anchor-fall  { animation: anchor-fall 3.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.anchor-slide { animation: anchor-slide 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.anchor-node  { animation: anchor-node 3.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph-beat, .glyph-trace, .glyph-sheen, .glyph-scan,
+  .cta-pulse, .badge-throb,
+  .anchor-fall, .anchor-slide, .anchor-node,
+  .navbar-flow-line {
+    animation: none !important;
+  }
+  /* The rails stay — they are the structure. Only the things riding them stop. */
+  .cta-pulse, .anchor-fall, .anchor-slide { opacity: 0 !important; }
+  .anchor-node { opacity: 0.7 !important; }
 }
 
 .navbar-flow-line {
@@ -386,9 +563,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(124, 107, 255, 0.8) 20%,
-    rgba(63, 208, 224, 0.9) 50%,
-    rgba(124, 107, 255, 0.8) 80%,
+    rgba(62, 156, 255, 0.8) 20%,
+    rgba(52, 245, 197, 0.9) 50%,
+    rgba(62, 156, 255, 0.8) 80%,
     transparent 100%
   );
   background-size: 200% 100%;
@@ -397,7 +574,7 @@
 
 /* ============ Orchestration canvas (scoped SVG presentation classes) ============ */
 .orch-canvas {
-  background: radial-gradient(70% 80% at 50% 30%, rgba(124, 107, 255, 0.07), transparent);
+  background: radial-gradient(70% 80% at 50% 30%, rgba(62, 156, 255, 0.07), transparent);
 }
 .orch-canvas .node-card {
   fill: rgba(20, 22, 38, 0.92);
@@ -405,7 +582,7 @@
   stroke-width: 1;
 }
 .orch-canvas .node-card.center {
-  stroke: rgba(124, 107, 255, 0.5);
+  stroke: rgba(62, 156, 255, 0.5);
 }
 .orch-canvas .ring-ok {
   fill: none;
@@ -433,7 +610,7 @@
 }
 .orch-canvas .edge {
   fill: none;
-  stroke: rgba(124, 107, 255, 0.28);
+  stroke: rgba(62, 156, 255, 0.28);
   stroke-width: 1.5;
 }
 .orch-canvas .ntitle {
@@ -449,7 +626,7 @@
 }
 .orch-canvas .nicon {
   fill: none;
-  stroke: var(--iris-2);
+  stroke: var(--brand-2);
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -464,4 +641,59 @@
 .orch-canvas .flow {
   fill: var(--cyan);
   filter: drop-shadow(0 0 4px var(--cyan));
+}
+
+/* ── Log rack ──────────────────────────────────────────────────────────────
+   The activity log's chassis. Materials are declared here rather than inline
+   because each is a long multi-stop gradient that reads as one physical
+   surface; scattering them through JSX makes them impossible to tune.        */
+
+/* Polished chrome, lit from above: dark shadow line, blown-out highlight,
+   falling midtone, dark core where the cylinder turns away, then the bounce
+   light coming back up off the drawer face. That core band is what stops it
+   reading as a flat grey pill. */
+:root {
+  --chrome: linear-gradient(
+    180deg,
+    /* A round bar lit from above, read off the reference: a narrow specular peak high up,
+       a dark equator where the cylinder turns away, and a broad bounce lobe below it picking
+       up light off the drawer face. The peak is deliberately not pure white and the ramps
+       into it are gradual — a wide flat #fff band is what made the earlier version look like
+       a painted stripe rather than metal. */
+    #0a0e13 0%, #5e6a78 6%, #c8d4e0 14%, #f4f8fc 22%,
+    #dae3ed 30%, #95a1af 40%, #4a5460 47%, #232b34 53%,
+    #2f3841 60%, #4e5865 70%, #77828f 80%, #9aa5b3 88%,
+    #525c68 95%, #090d12 100%
+  );
+  --chassis-edge: linear-gradient(160deg, #7c8794, #262c33 30%, #0c0f13 62%, #5a646f);
+  --chassis-face: linear-gradient(180deg, #39414a, #1d232a 22%, #14181d 70%, #232a31);
+  --drawer-face: linear-gradient(180deg, #1e242c 0%, #161b22 45%, #0e1218 100%);
+}
+
+/* The scroller inside the chassis. A default scrollbar next to this much
+   fabricated metal is the one thing that gives the whole panel away. */
+/* Firefox only. In Chrome 121+ the presence of `scrollbar-width` switches the element to
+   the standard scrollbar and makes it ignore every ::-webkit-scrollbar rule below, so this
+   has to stay behind a query Chrome fails. */
+@supports not selector(::-webkit-scrollbar) {
+  .rack-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #4b5560 transparent;
+  }
+}
+.rack-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.rack-scroll::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, #0a0d11, #12161b);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.rack-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #8b95a2, #4a545f 40%, #2b333c 60%, #6b7480);
+}
+.rack-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a6b1bf, #5a6570 40%, #363f49 60%, #7d8794);
 }

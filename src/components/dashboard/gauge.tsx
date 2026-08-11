@@ -33,7 +33,7 @@ export function Gauge({ value, label }: { value: number; label: string }) {
           transform="rotate(-90 38 38)"
           style={{ transition: "stroke 0.4s" }}
         />
-        <text x="38" y="42" textAnchor="middle" fill="#EDEFF7" className="font-mono text-[15px] font-medium">
+        <text x="38" y="42" textAnchor="middle" fill="#EDEFF7" className="font-mono text-[14px] font-medium">
           {Math.round(animated)}%
         </text>
       </svg>

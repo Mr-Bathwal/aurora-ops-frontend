@@ -1,20 +1,26 @@
 import type { Metadata } from "next";
-import { Sora, Inter, JetBrains_Mono } from "next/font/google";
+import { Manrope, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
+import { SmoothScroll } from "@/components/layout/smooth-scroll";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const sora = Sora({
-  variable: "--font-sora",
+/** Display face. Manrope replaces Space Grotesk: the reference sets its headlines in it,
+ * and at 64px the difference is not subtle — Grotesk's wider apertures and squarer bowls
+ * read as technical, Manrope reads as calm, which is the whole tonal difference between
+ * what we had and what we are building toward. */
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["500", "600", "700", "800"],
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  // 700 added: the reference leans on it for emphasis runs inside body copy.
+  weight: ["400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -30,8 +36,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`dark ${sora.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`dark ${manrope.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen">
+        <SmoothScroll />
         <TooltipProvider delay={200}>
           <AppShell>{children}</AppShell>
         </TooltipProvider>

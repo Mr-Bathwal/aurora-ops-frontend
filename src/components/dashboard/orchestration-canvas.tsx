@@ -14,8 +14,8 @@ const EDGE_D = {
 } as const;
 
 const EDGE_ID = { health: "#e1", log: "#e2", backup: "#e3" } as const;
-const SEVERITY_COLOR: Record<string, string> = { ok: "#46E0A0", warn: "#FFC56B", crit: "#FF6B81" };
-const IDLE_COLOR = "#3FD0E0";
+const SEVERITY_COLOR: Record<string, string> = { ok: "#34f5c5", warn: "#FFC56B", crit: "#FF6B81" };
+const IDLE_COLOR = "#34F5C5";
 
 function eColor(key: HoverNode, entries: ReturnType<typeof useActivityStore.getState>["entries"]) {
   const last = entries.find((e) => e.agentKey === key);
@@ -146,9 +146,9 @@ export function OrchestrationCanvas() {
         {clickedNode === "backup" && <circle cx="360" cy="300" r="58" fill="none" stroke={bC} strokeWidth="3" style={{ animation: "hover-ring-pulse 0.28s ease-in-out infinite", filter: `drop-shadow(0 0 18px ${bC})` }} />}
 
         {/* ── Orchestrator center ── */}
-        <g style={{ filter: activeNode ? "drop-shadow(0 0 24px #7C6BFF) drop-shadow(0 0 48px #7C6BFF44)" : "none", transition: "filter 0.3s" }}>
+        <g style={{ filter: activeNode ? "drop-shadow(0 0 24px #3E9CFF) drop-shadow(0 0 48px #3E9CFF44)" : "none", transition: "filter 0.3s" }}>
           <circle cx="360" cy="150" r="46" className="node-card center" />
-          <circle cx="360" cy="150" r="46" fill="none" stroke="var(--iris)" strokeWidth="1" opacity="0.4">
+          <circle cx="360" cy="150" r="46" fill="none" stroke="var(--brand)" strokeWidth="1" opacity="0.4">
             <animate attributeName="r" values="46;54;46" dur="3s" repeatCount="indefinite" />
             <animate attributeName="opacity" values=".4;0;.4" dur="3s" repeatCount="indefinite" />
           </circle>

@@ -18,9 +18,9 @@ export function ReportCard({
   kv?: KvRow[];
 }) {
   return (
-    <div className="panel-deep overflow-hidden rounded-2xl border">
+    <div className="panel-deep overflow-hidden rounded-[20px] border">
       <div className="h-[2px] w-full" style={{
-        background: "linear-gradient(90deg, transparent 0%, #7C6BFF 25%, #3FD0E0 75%, transparent 100%)",
+        background: "linear-gradient(90deg, transparent 0%, #3e9cff 25%, #5ac8ff 75%, transparent 100%)",
         boxShadow: "0 0 14px rgba(124,107,255,0.8), 0 0 28px rgba(63,208,224,0.5)",
       }} />
       <div className="flex items-center justify-between border-b border-white/8 px-4.5 py-3.5">

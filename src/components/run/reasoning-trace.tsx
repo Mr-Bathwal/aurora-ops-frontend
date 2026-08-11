@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { Brain, Terminal, CheckCircle2, type LucideIcon } from "lucide-react";
+import { Brain, Terminal, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TraceStep } from "@/lib/api";
+import type { IconType } from "@/lib/icon-type";
 
 const CODE_TOOLS = new Set(["run_custom_check", "save_custom_tool"]);
 
@@ -33,7 +34,7 @@ function Step({
   children,
   isLast,
 }: {
-  icon: LucideIcon;
+  icon: IconType;
   kind: string;
   tone: "think" | "tool" | "done";
   children: ReactNode;
@@ -45,12 +46,12 @@ function Step({
       <div
         className={cn(
           "z-1 grid size-6.5 shrink-0 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground",
-          tone === "think" && "border-iris/40 bg-grad-soft text-iris-2",
+          tone === "think" && "border-brand/40 bg-grad-soft text-brand-2",
           tone === "tool" && "text-cyan",
           tone === "done" && "border-ok/40 bg-ok-soft text-ok"
         )}
       >
-        <Icon className="size-3.5" />
+        <Icon size={14} />
       </div>
       <div className="min-w-0 flex-1 pb-1">
         <div className="mb-0.5 text-[10px] tracking-[0.1em] text-faint uppercase">{kind}</div>
@@ -66,11 +67,11 @@ export function ReasoningTrace({ trace, plan, loading }: { trace: TraceStep[]; p
   const showDone = !loading && trace.length > 0;
 
   return (
-    <div className="panel-deep overflow-hidden rounded-2xl border">
+    <div className="panel-deep overflow-hidden rounded-[20px] border">
       {/* Neon top accent line — visually lifts the panel above the rain */}
       <div className="h-[2px] w-full" style={{
-        background: "linear-gradient(90deg, transparent 0%, #7C6BFF 25%, #3FD0E0 75%, transparent 100%)",
-        boxShadow: "0 0 14px rgba(124,107,255,0.8), 0 0 28px rgba(63,208,224,0.5)",
+        background: "linear-gradient(90deg, transparent 0%, #3E9CFF 25%, #34F5C5 75%, transparent 100%)",
+        boxShadow: "0 0 14px rgba(62,156,255,0.8), 0 0 28px rgba(0,240,255,0.5)",
       }} />
       <div className="flex items-center justify-between border-b border-white/8 px-4.5 py-3.5">
         <h3 className="flex items-center gap-2 font-heading text-[14px] font-semibold">
@@ -97,7 +98,7 @@ export function ReasoningTrace({ trace, plan, loading }: { trace: TraceStep[]; p
               kind={isCodeTool ? "AI-generated code" : "Tool call"}
               tone="tool"
             >
-              <div className="font-mono text-[12px] text-iris-2">
+              <div className="font-mono text-[12px] text-brand-2">
                 {call.name}
                 {formatArgs(call.args)}
               </div>

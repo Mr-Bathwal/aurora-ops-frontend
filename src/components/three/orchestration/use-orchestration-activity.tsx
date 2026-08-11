@@ -5,8 +5,8 @@ import { useActivityStore, lastRunFor, type AgentKey } from "@/lib/activity-stor
 
 export type SatelliteKey = "health" | "log" | "backup";
 
-const SEVERITY_COLOR: Record<string, string> = { ok: "#46e0a0", warn: "#ffc56b", crit: "#ff6b81" };
-const IDLE_COLOR = "#3fd0e0";
+const SEVERITY_COLOR: Record<string, string> = { ok: "#34f5c5", warn: "#ffc56b", crit: "#ff6b81" };
+const IDLE_COLOR = "#5ac8ff";
 
 const ROUTES: Record<SatelliteKey, string> = {
   health: "/run?tab=health&autorun=1",

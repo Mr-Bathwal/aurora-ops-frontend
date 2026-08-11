@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scratch artifact written by scripts/verify-shaders.mjs for a browser to fetch
+/public/shader-probe.html
+
+# Working captures — 158MB of debug screenshots taken while building. Regenerable
+# from scripts/shoot.mjs and scripts/audit-final.mjs; not project content.
+/screenshots/
+
+# Throwaway one-off scripts from debugging sessions. The durable ones (shoot,
+# audit-final, extract-robot, prep-constellation, check-overflow) are tracked.
+/scripts/tmp-*.mjs
+/scripts/.*-preview.png
+
+# Machine-local Claude Code settings. launch.json IS tracked — it is shared config.
+/.claude/settings.local.json

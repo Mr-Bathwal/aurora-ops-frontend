@@ -14,6 +14,14 @@ export const AGENT_LABELS: Record<AgentKey, string> = {
   auto: "Auto-Remediate",
 };
 
+export const AGENT_COLOR: Record<AgentKey, string> = {
+  health: "#34f5c5",
+  log: "#ff6b81",
+  backup: "#3e9cff",
+  orchestrator: "#34f5c5",
+  auto: "#ffc56b",
+};
+
 export interface ActivityEntry {
   id: string;
   timestamp: string;

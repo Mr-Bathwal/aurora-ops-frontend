@@ -3,9 +3,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { SearchOverlay } from "@/components/layout/search-overlay";
-import { CustomCursor } from "@/components/layout/cursor";
+import { Footer } from "@/components/layout/footer";
 import { useSpotlight } from "@/hooks/use-spotlight";
-import { GlobalMatrixRain } from "@/components/layout/global-matrix-rain";
 
 export function AppShell({ children }: { children: ReactNode }) {
   useSpotlight();
@@ -22,14 +21,20 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", handleKeydown);
   }, []);
 
+  // No sitewide WebGL wash any more. It was a second, animated, cyan-tinted atmosphere
+  // sitting behind every section's own backdrop — on the hero it showed through as a drift
+  // of cyan specks that had nothing to do with the star field in front of it. Sections own
+  // their own background now.
   return (
     <div className="relative flex min-h-screen flex-col">
-      <GlobalMatrixRain />
-      <CustomCursor />
       <Navbar onOpenSearch={() => setSearchOpen(true)} />
-      <main className="relative z-1 mx-auto w-full max-w-screen-2xl flex-1 px-7 py-8 pb-16">
+      {/* pb-36 is the whole gap above the footer now that the footer carries none itself —
+          the 64px this used to be plus the 80px that lived on the footer. Band-based pages
+          cancel it with a matching -mb-36 on their last band. */}
+      <main className="relative z-1 mx-auto w-full max-w-screen-2xl flex-1 px-7 py-8 pb-36">
         {children}
       </main>
+      <Footer />
       <SearchOverlay key={searchOpen ? "open" : "closed"} open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );

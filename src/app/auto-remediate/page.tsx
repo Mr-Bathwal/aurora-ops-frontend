@@ -1,241 +1,47 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Activity, Database, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { PageHeader } from "@/components/aurora/page-header";
-import { PipelineStage } from "@/components/auto-remediate/pipeline-stage";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { RobotSvg } from "@/components/dashboard/robot-svg";
-import { api, type AutoRemediateResult } from "@/lib/api";
+import { SectionBand } from "@/components/aurora/section-band";
+import { SectionHeading } from "@/components/aurora/section-heading";
+import { PlexusBackdrop } from "@/components/auto-remediate/plexus-backdrop";
+import { ProcessIntro } from "@/components/auto-remediate/process-intro";
+import { RemediationGraph } from "@/components/auto-remediate/remediation-graph";
+import { RunConsole, type Exchange } from "@/components/auto-remediate/run-console";
+import { WorkflowChart } from "@/components/auto-remediate/workflow-chart";
+import { api } from "@/lib/api";
 import { inferOutcome } from "@/lib/outcome";
 import { useActivityStore } from "@/lib/activity-store";
 
-/* ── Robot trio config ──────────────────────────────────── */
-const TRIO = [
-  { accentColor: "#FF6B81", eyeColor: "#FF6B81", name: "Diagnose",  from: { x: -700, y: 0 },  size: 100 },
-  { accentColor: "#46E0A0", eyeColor: "#3FD0E0", name: "Verify",    from: { x: 0,    y: 700 }, size: 114 },
-  { accentColor: "#7C6BFF", eyeColor: "#A99BFF", name: "Remediate", from: { x: 700,  y: 0 },  size: 100 },
-] as const;
-
-const TRIO_LINES = [
-  "We are your full auto-remediation pipeline.",
-  "Diagnose → Remediate → Verify — all automated.",
-  "Three agents working as one unified system.",
-  "Drag the tail below to activate!",
-] as const;
-
-/* ── Accumulated terminal cloud (same pattern as AccumulatedTyper) ── */
-function PipelineCloud({ lines, color }: { lines: readonly string[]; color: string }) {
-  const [completed, setCompleted] = useState<string[]>([]);
-  const [current, setCurrent] = useState("");
-  const [lineIdx, setLineIdx] = useState(0);
-  const [charIdx, setCharIdx] = useState(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (lineIdx >= lines.length) return;
-    const line = lines[lineIdx] ?? "";
-    if (charIdx < line.length) {
-      timer.current = setTimeout(() => {
-        setCurrent(line.slice(0, charIdx + 1));
-        setCharIdx((n) => n + 1);
-      }, 26);
-    } else {
-      timer.current = setTimeout(() => {
-        setCompleted((prev) => [...prev, line]);
-        setCurrent("");
-        setCharIdx(0);
-        setLineIdx((i) => i + 1);
-      }, 340);
-    }
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [lineIdx, charIdx, lines]);
-
-  const done = lineIdx >= lines.length;
-
-  return (
-    <div
-      className="panel-deep relative rounded-xl border px-5 py-4"
-      style={{
-        minWidth: 310,
-        maxWidth: 460,
-        borderColor: `${color}70`,
-        boxShadow: `0 0 52px ${color}38, 0 0 100px rgba(0,0,0,0.88)`,
-      }}
-    >
-      {/* Down-tail toward robot cluster */}
-      <div
-        className="absolute -bottom-[10px] left-1/2 -translate-x-1/2"
-        style={{
-          borderTop: `10px solid ${color}70`,
-          borderLeft: "8px solid transparent",
-          borderRight: "8px solid transparent",
-        }}
-      />
-      <div className="mb-2 font-mono text-[9.5px] uppercase tracking-widest" style={{ color }}>
-        [FULL_PIPELINE_BOT]
-      </div>
-      <div className="space-y-0.5">
-        {completed.map((l, i) => (
-          <div key={i} className="font-mono text-[12.5px] leading-[1.75]" style={{ color }}>{l}</div>
-        ))}
-        {current && (
-          <div className="font-mono text-[12.5px] leading-[1.75]" style={{ color }}>
-            {current}<span style={{ animation: "blink-cursor 0.8s infinite" }}>_</span>
-          </div>
-        )}
-        {done && (
-          <div className="mt-1.5 font-mono text-[10px]" style={{ color: `${color}70` }}>
-            ↓ drag tail to activate pipeline
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ── Elastic draggable tail ──────────────────────────── */
-function PipelineTail({ onPull }: { onPull: () => void }) {
-  const color = "#3FD0E0";
-  const tailY = useMotionValue(0);
-  const cordH = useTransform(tailY, [0, 120], [72, 160]);
-
-  return (
-    <div className="mt-1 flex flex-col items-center">
-      <motion.div
-        drag="y"
-        dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={{ top: 0, bottom: 0.45 }}
-        style={{ y: tailY }}
-        whileDrag={{ scale: 1.06 }}
-        onDragEnd={(_, info) => { if (info.offset.y > 55) onPull(); }}
-        className="flex cursor-grab flex-col items-center touch-none select-none active:cursor-grabbing"
-      >
-        <motion.div style={{ height: cordH }} className="flex flex-col items-center">
-          <div
-            className="w-0.5 flex-1"
-            style={{
-              background: `repeating-linear-gradient(180deg,${color} 0px,${color} 7px,transparent 7px,transparent 14px)`,
-              filter: `drop-shadow(0 0 5px ${color})`,
-            }}
-          />
-          <div
-            className="mt-1 grid size-8 place-items-center rounded-full"
-            style={{ background: color, boxShadow: `0 0 18px ${color}, 0 0 36px ${color}60` }}
-          >
-            <div className="size-3.5 rounded-full bg-[#050510]" />
-          </div>
-        </motion.div>
-      </motion.div>
-      <div
-        className="mt-2.5 font-mono text-[9px] uppercase tracking-widest"
-        style={{ color, animation: "wire-spark 1.6s ease-in-out infinite" }}
-      >
-        drag to activate ↓
-      </div>
-    </div>
-  );
-}
-
-/* ── Triple-robot merge component ──────────────────────── */
-function RobotTrioEntry({ onRun }: { onRun: () => void }) {
-  const settledRef = useRef(0);
-  const [allSettled, setAllSettled] = useState(false);
-  const [pulled, setPulled] = useState(false);
-
-  function onOneSettled() {
-    settledRef.current++;
-    if (settledRef.current >= TRIO.length) setAllSettled(true);
-  }
-
-  function handlePull() {
-    if (pulled) return;
-    setPulled(true);
-    onRun();
-  }
-
-  return (
-    <div className="flex flex-col items-center py-8">
-      <AnimatePresence>
-        {allSettled && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.86, y: 14 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45 }}
-            className="mb-8"
-          >
-            <PipelineCloud lines={TRIO_LINES} color="#3FD0E0" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Three robots entering from different directions */}
-      <div className="flex items-end gap-6">
-        {TRIO.map((bot, i) => (
-          <motion.div
-            key={bot.name}
-            initial={bot.from}
-            animate={{ x: 0, y: 0 }}
-            transition={{ type: "spring", stiffness: 52, damping: 14, delay: i * 0.08 }}
-            onAnimationComplete={onOneSettled}
-            className="flex flex-col items-center gap-1"
-          >
-            <RobotSvg
-              accentColor={bot.accentColor}
-              eyeColor={bot.eyeColor}
-              size={bot.size}
-              animated
-              waveArm={allSettled && !pulled && i === 1}
-            />
-            <div className="font-mono text-[9px] uppercase tracking-widest" style={{ color: bot.accentColor }}>
-              {bot.name}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      <AnimatePresence>
-        {allSettled && !pulled && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <PipelineTail onPull={handlePull} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {pulled && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="mt-4 font-mono text-[11px] uppercase tracking-widest text-cyan"
-        >
-          ⚡ Pipeline activating...
-        </motion.div>
-      )}
-    </div>
-  );
-}
-
-/* ── Page ──────────────────────────────────────────────── */
+/** Auto-remediate, told as a scroll.
+ *
+ * Four chapters in the landing page's own band grammar: what the chain is, the chain lighting
+ * up stage by stage, the console you drive it from, and the workflow it produced. The bands
+ * sit on the page floor and on pure black rather than on a plate — the graph is a dark scene
+ * and wants the room dark behind it, exactly as the home page's outcome band does.
+ */
 export default function AutoRemediatePage() {
-  const [result, setResult] = useState<AutoRemediateResult | null>(null);
+  const [history, setHistory] = useState<Exchange[]>([]);
   const [loading, setLoading] = useState(false);
+  // Bumped on every run so the graph remounts its animated layer and retells the story with
+  // the request in flight.
+  const [replayToken, setReplayToken] = useState(0);
+  // Stamped here, in the handler, so the workflow chart's clock never has to reset itself
+  // from inside an effect.
+  const [startedAt, setStartedAt] = useState<number | null>(null);
   const add = useActivityStore((s) => s.add);
 
-  async function handleRun() {
+  async function handleSend(prompt: string) {
+    if (loading) return;
+    const id = Date.now();
     setLoading(true);
+    setStartedAt(Date.now());
+    setReplayToken((t) => t + 1);
+
     try {
-      const data = await api.autoRemediate();
-      setResult(data);
+      const data = await api.autoRemediate(prompt);
       const outcome = inferOutcome(data.report);
+      setHistory((h) => [...h, { id, prompt, result: data, error: null }]);
       add({
         agentKey: "auto",
         action: data.needs_backup ? "diagnose → remediate → verify" : "diagnose → verify",
@@ -243,93 +49,64 @@ export default function AutoRemediatePage() {
         outcomeLabel: outcome.label,
         report: data.report,
       });
-      toast.success("Auto-remediation complete", { description: outcome.label });
+      toast.success("Chain complete", { description: outcome.label });
     } catch (e) {
-      toast.error("Auto-remediation failed", {
-        description: e instanceof Error ? e.message : "Something went wrong",
-      });
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      setHistory((h) => [...h, { id, prompt, result: null, error: message }]);
+      toast.error("Chain failed", { description: message });
     } finally {
       setLoading(false);
     }
   }
 
-  const finalOutcome = result ? inferOutcome(result.report) : null;
+  const lastResult = [...history].reverse().find((x) => x.result)?.result ?? null;
+  const outcome = lastResult ? inferOutcome(lastResult.report) : null;
 
   return (
-    <div>
-      <PageHeader
-        eyebrow="Auto diagnose & fix"
-        title="Collaborative remediation"
-        subtitle="Agents hand work to each other and a supervisor verifies the outcome before reporting."
-      />
+    <>
+      <PlexusBackdrop />
 
-      {/* Triple-robot entry — shown when nothing has run */}
-      <AnimatePresence mode="wait">
-        {!result && !loading && (
-          <motion.div
-            key="trio"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <RobotTrioEntry onRun={handleRun} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Every band below is transparent so the field reads through the whole scroll — the
+          floor bands paint nothing by default, and the raised one trades its opaque
+          `--bg-2` for the same colour at 68%, which keeps the chapter break without
+          punching a hole in the backdrop. */}
 
-      {/* Loading skeletons */}
-      {loading && !result && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-3.5"
+      {/* 1 — What it is. */}
+      <SectionBand tone="floor">
+        <ProcessIntro />
+      </SectionBand>
+
+      {/* 2 — The chain, lighting stage by stage as it comes into view. */}
+      <SectionBand tone="floor">
+        <SectionHeading
+          eyebrow="The chain"
+          sub="One diagnosis, one decision, and only the lanes that decision opens. Every wire here is an edge in the graph the backend actually walks."
         >
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="panel-deep rounded-2xl border p-5">
-              <Skeleton className="mb-3 h-5 w-1/3 bg-white/5" />
-              <Skeleton className="h-4 w-full bg-white/5" />
-              <Skeleton className="mt-2 h-4 w-4/5 bg-white/5" />
-            </div>
-          ))}
-        </motion.div>
-      )}
+          Watch the current move through it.
+        </SectionHeading>
+        <div className="mt-12">
+          <RemediationGraph replayToken={replayToken} />
+        </div>
+      </SectionBand>
 
-      {/* Pipeline results */}
-      {result && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
+      {/* 3 + 4 — Drive it, then read what it did. Raised, so the working half of the page
+          separates from the story half the way the home page's chapters do. */}
+      <SectionBand tone="raised" className="-mb-36 bg-[rgba(12,15,20,0.68)] backdrop-blur-[2px]">
+        <SectionHeading
+          eyebrow="Run it"
+          sub="Send one message and four stages answer — the diagnosis, the routing decision, the fix if one was needed, and the supervisor's verdict."
         >
-          <PipelineStage icon={Activity}    title="Diagnose"  who="Log Analyzer"  tone="ok"                        text={result.diagnosis} />
-          <div className="mb-3.5 ml-[60px] font-mono text-[11.5px] text-iris-2">
-            &#9656; decision:{" "}
-            {result.needs_backup
-              ? "backup issue found → route to remediation"
-              : "no backup issue → skip to verification"}
-          </div>
-          {result.needs_backup && result.remediation && (
-            <PipelineStage icon={Database}    title="Remediate" who="Backup & DR"   tone="ok"                        text={result.remediation} />
-          )}
-          <PipelineStage
-            icon={ShieldCheck}
-            title="Verify"
-            who="Supervisor"
-            tone={finalOutcome?.severity ?? "ok"}
-            text={result.report}
-            isLast
-          />
-          <Button
-            onClick={handleRun}
-            disabled={loading}
-            className="mt-1.5 gap-1.5 bg-grad text-[#070810] hover:brightness-110"
-          >
-            {loading ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-            Run again
-          </Button>
-        </motion.div>
-      )}
-    </div>
+          Talk to the chain.
+        </SectionHeading>
+
+        <div className="mx-auto mt-12 max-w-[900px]">
+          <RunConsole history={history} loading={loading} onSend={handleSend} />
+        </div>
+
+        <div className="mx-auto mt-6 max-w-[900px]">
+          <WorkflowChart result={lastResult} loading={loading} outcome={outcome} startedAt={startedAt} />
+        </div>
+      </SectionBand>
+    </>
   );
 }

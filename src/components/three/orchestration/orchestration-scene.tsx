@@ -38,13 +38,17 @@ export function OrchestrationScene({ enablePostprocessing }: { enablePostprocess
       <ambientLight intensity={0.35} />
       <directionalLight position={[3, 4, 5]} intensity={0.6} />
 
-      {/* Fully procedural "softbox" lighting rig (colored planes, no photographic HDRI) —
-          MeshTransmissionMaterial needs something to refract, and this keeps every pixel
-          on screen code-generated rather than pulling in a stock environment texture. */}
-      <Environment resolution={256}>
-        <Lightformer intensity={3} color="#7c6bff" position={[-3, 2, 2]} scale={[3, 3, 1]} />
-        <Lightformer intensity={2} color="#3fd0e0" position={[3, -1, 2]} scale={[3, 3, 1]} />
+      {/* Fully procedural "studio" lighting rig (colored + white planes, no photographic
+          HDRI) — the chrome orchestrator core needs a richer environment to reflect than the
+          satellites' softer material did, so this is a fuller rig than before: a big soft key
+          light, two brand-colored fills, and a dark "floor" plane underneath for a visible
+          horizon line in the reflection (the classic studio-product-shot trick for metal). */}
+      <Environment resolution={512}>
+        <Lightformer intensity={4} color="#ffffff" position={[0, 4, 2]} scale={[6, 3, 1]} />
+        <Lightformer intensity={3} color="#3e9cff" position={[-3, 2, 2]} scale={[3, 3, 1]} />
+        <Lightformer intensity={2} color="#5ac8ff" position={[3, -1, 2]} scale={[3, 3, 1]} />
         <Lightformer intensity={1.5} color="#ffffff" position={[0, 3, -3]} scale={[4, 4, 1]} />
+        <Lightformer intensity={0.6} color="#0b0b14" position={[0, -3, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 10, 1]} />
       </Environment>
 
       <OrchestratorCore active={anyActive} />
