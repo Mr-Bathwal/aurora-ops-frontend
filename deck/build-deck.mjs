@@ -563,33 +563,50 @@ function icon(s, kind, cx, cy, r = 0.28) {
   ];
   runs.forEach(([v, l], i) => stat(s, { x: 0.62 + i * 2.72, y: 2.4, w: 2.55, value: v, label: l, size: 32 }));
 
-  s.addText("WHAT THAT CHANGES", { x: 0.62, y: 4.16, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
+  s.addText("WHAT THAT CHANGES", { x: 0.62, y: 4.12, w: 3.2, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
+
+  // Two labelled columns, so the section reads as an explicit Manual → Automation comparison
+  // rather than three loose before/after pairs. Grey heads the manual side, yellow the ours.
+  const MANx = 4.06, MANw = 2.1, AUTx = 6.92, AUTw = 2.5;
+  s.addText("MANUAL", { x: MANx, y: 4.12, w: MANw, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.grey, charSpacing: 1.6 });
+  s.addShape(pres.ShapeType.line, { x: MANx, y: 4.42, w: MANw, h: 0, line: { color: C.line, width: 1 } });
+  s.addText("AUTOMATION", { x: AUTx, y: 4.12, w: AUTw, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.6 });
+  s.addShape(pres.ShapeType.line, { x: AUTx, y: 4.42, w: AUTw, h: 0, line: { color: C.yellow, width: 1 } });
+
   const gains = [
     ["Time to a verified answer", "about 35 minutes", "11.8 seconds"],
     ["Checks per investigation", "whatever you recall", "up to 11, chosen live"],
     ["Record of what was done", "a ticket comment", "every tool call, logged"],
   ];
   gains.forEach(([label, before, after], i) => {
-    const y = 4.54 + i * 0.6;
+    const y = 4.66 + i * 0.58;
     s.addText(label, { x: 0.62, y, w: 3.3, h: 0.3, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey });
-    s.addText(before, { x: 4.06, y, w: 2.2, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.dim });
-    s.addShape(pres.ShapeType.line, { x: 6.4, y: y + 0.14, w: 0.3, h: 0, line: { color: C.yellow, width: 1.25, endArrowType: "triangle" } });
-    s.addText(after, { x: 6.92, y, w: 2.5, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.yellow });
+    s.addText(before, { x: MANx, y, w: MANw, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.dim });
+    s.addShape(pres.ShapeType.line, { x: 6.36, y: y + 0.14, w: 0.32, h: 0, line: { color: C.yellow, width: 1.25, endArrowType: "triangle" } });
+    s.addText(after, { x: AUTx, y, w: AUTw, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.yellow });
   });
 
   card(s, { x: 9.6, y: 1.96, w: 3.12, h: 4.46, accent: true });
-  s.addText("TIME TO A VERIFIED ANSWER", { x: 9.94, y: 2.26, w: 2.6, h: 0.42, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2 });
-  // A clean number comparison, not a proportional bar. At 11.8s against 35min the yellow bar was
-  // a tiny nub that read as broken; the contrast now lives in the numbers and the multiple.
-  s.addText("Manual", { x: 9.94, y: 2.76, w: 1.0, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey });
-  s.addText("~35 min", { x: 11.0, y: 2.76, w: 1.4, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 11, color: C.grey, align: "right" });
-  s.addText("Aurora Ops", { x: 9.94, y: 3.14, w: 1.02, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.white });
-  s.addText("11.8 s", { x: 11.0, y: 3.14, w: 1.4, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 11, bold: true, color: C.yellow, align: "right" });
-  s.addText("≈ 180× faster", { x: 9.94, y: 3.64, w: 2.5, h: 0.36, margin: 0, fontFace: F.head, fontSize: 16, bold: true, color: C.yellow });
-  s.addShape(pres.ShapeType.line, { x: 9.94, y: 4.4, w: 2.44, h: 0, line: { color: C.line, width: 1 } });
-  stat(s, { x: 9.94, y: 4.58, w: 2.5, value: "~11 hrs", label: "saved per week at 20\nroutine investigations", size: 30 });
-  s.addText("The 11.8s is measured. The 35 minutes is an estimate, and the saving scales from it.", {
-    x: 9.94, y: 5.9, w: 2.56, h: 0.48, margin: 0, fontFace: F.body, fontSize: 9.5, color: C.dim, italic: true, lineSpacing: 12.5,
+  s.addText("TIME TO A VERIFIED ANSWER", { x: 9.94, y: 2.2, w: 2.6, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2 });
+
+  // Two contrasting blocks — grey manual against a yellow-accented automation — so the
+  // difference is read at a glance, not decoded from two numbers on adjacent lines.
+  const bx = 9.86, bw = 2.6;
+  // Manual: neutral, muted, deliberately heavy-looking against the ours block below it.
+  s.addShape(pres.ShapeType.rect, { x: bx, y: 2.56, w: bw, h: 0.84, fill: { color: C.panel2 }, line: { color: C.line, width: 0.75 } });
+  s.addText("MANUAL", { x: bx + 0.18, y: 2.66, w: 2.2, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.6 });
+  s.addText("~35 min", { x: bx + 0.16, y: 2.9, w: bw - 0.34, h: 0.42, margin: 0, fontFace: F.head, fontSize: 20, bold: true, color: C.grey });
+  // Automation: yellow left edge, yellow label and value — clearly "ours", clearly faster.
+  s.addShape(pres.ShapeType.rect, { x: bx, y: 3.5, w: bw, h: 0.84, fill: { color: C.panel2 }, line: { color: C.yellow, width: 1.25 } });
+  s.addShape(pres.ShapeType.rect, { x: bx, y: 3.5, w: 0.07, h: 0.84, fill: { color: C.yellow }, line: { width: 0 } });
+  s.addText("AUTOMATION", { x: bx + 0.22, y: 3.6, w: 2.2, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.yellow, charSpacing: 1.6 });
+  s.addText("11.8 s", { x: bx + 0.2, y: 3.84, w: 1.0, h: 0.42, margin: 0, fontFace: F.head, fontSize: 20, bold: true, color: C.yellow });
+  s.addText("180× faster", { x: bx + 1.32, y: 3.94, w: 1.16, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 10, color: C.yellow, align: "right" });
+
+  s.addShape(pres.ShapeType.line, { x: 9.94, y: 4.56, w: 2.44, h: 0, line: { color: C.line, width: 1 } });
+  stat(s, { x: 9.94, y: 4.7, w: 2.5, value: "~11 hrs", label: "saved per week at 20\nroutine investigations", size: 28 });
+  s.addText("The 11.8s is measured; the 35 minutes is an estimate the saving scales from.", {
+    x: 9.94, y: 5.96, w: 2.56, h: 0.44, margin: 0, fontFace: F.body, fontSize: 9, color: C.dim, italic: true, lineSpacing: 12,
   });
   s.addNotes("Be straight about the arithmetic. Run times are measured; the 35-minute baseline is an assumption printed on the slide. If pushed, offer to recompute with their number.");
 }
