@@ -555,13 +555,19 @@ function icon(s, kind, cx, cy, r = 0.28) {
 {
   const s = slide("Outcomes & Impact", "What automating judgement actually saves.");
 
-  s.addText("MEASURED ON THIS MACHINE", { x: 0.62, y: 2.02, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
+  s.addText("REAL RUNS ON THIS MACHINE", { x: 0.62, y: 2.02, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
+  // Counts, not times. The tool count and the number of stages are what a run actually does and
+  // do not change; the wall-clock time swings run to run with model latency, so it is claimed as
+  // "seconds" below rather than as a fragile decimal that reads differently every time.
   const runs = [
-    ["1.4s", "for a targeted question\n(2 tool calls)"],
-    ["3.4s", "for a full health check\n(7 tool calls)"],
-    ["11.8s", "to diagnose, act and verify\n(2 agents, 4 stages)"],
+    ["2 tools", "a targeted question"],
+    ["7 tools", "a full health check"],
+    ["4 stages", "diagnose, act and verify"],
   ];
-  runs.forEach(([v, l], i) => stat(s, { x: 0.62 + i * 2.72, y: 2.4, w: 2.55, value: v, label: l, size: 32 }));
+  runs.forEach(([v, l], i) => stat(s, { x: 0.62 + i * 2.72, y: 2.4, w: 2.6, value: v, label: l, size: 28 }));
+  s.addText("Every run finishes in seconds — the same checks by hand run to the half hour.", {
+    x: 0.62, y: 3.76, w: 8.4, h: 0.28, margin: 0, fontFace: F.body, fontSize: 12.5, color: C.grey,
+  });
 
   s.addText("WHAT THAT CHANGES", { x: 0.62, y: 4.12, w: 3.2, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
 
@@ -574,7 +580,7 @@ function icon(s, kind, cx, cy, r = 0.28) {
   s.addShape(pres.ShapeType.line, { x: AUTx, y: 4.42, w: AUTw, h: 0, line: { color: C.yellow, width: 1 } });
 
   const gains = [
-    ["Time to a verified answer", "about 35 minutes", "11.8 seconds"],
+    ["Time to a verified answer", "about 35 minutes", "seconds"],
     ["Checks per investigation", "whatever you recall", "up to 11, chosen live"],
     ["Record of what was done", "a ticket comment", "every tool call, logged"],
   ];
@@ -589,26 +595,24 @@ function icon(s, kind, cx, cy, r = 0.28) {
   card(s, { x: 9.6, y: 1.96, w: 3.12, h: 4.46, accent: true });
   s.addText("TIME TO A VERIFIED ANSWER", { x: 9.94, y: 2.2, w: 2.6, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2 });
 
-  // Two contrasting blocks — grey manual against a yellow-accented automation — so the
-  // difference is read at a glance, not decoded from two numbers on adjacent lines.
-  const bx = 9.86, bw = 2.6;
-  // Manual: neutral, muted, deliberately heavy-looking against the ours block below it.
-  s.addShape(pres.ShapeType.rect, { x: bx, y: 2.56, w: bw, h: 0.84, fill: { color: C.panel2 }, line: { color: C.line, width: 0.75 } });
-  s.addText("MANUAL", { x: bx + 0.18, y: 2.66, w: 2.2, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.6 });
-  s.addText("~35 min", { x: bx + 0.16, y: 2.9, w: bw - 0.34, h: 0.42, margin: 0, fontFace: F.head, fontSize: 20, bold: true, color: C.grey });
-  // Automation: yellow left edge, yellow label and value — clearly "ours", clearly faster.
-  s.addShape(pres.ShapeType.rect, { x: bx, y: 3.5, w: bw, h: 0.84, fill: { color: C.panel2 }, line: { color: C.yellow, width: 1.25 } });
-  s.addShape(pres.ShapeType.rect, { x: bx, y: 3.5, w: 0.07, h: 0.84, fill: { color: C.yellow }, line: { width: 0 } });
-  s.addText("AUTOMATION", { x: bx + 0.22, y: 3.6, w: 2.2, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.yellow, charSpacing: 1.6 });
-  s.addText("11.8 s", { x: bx + 0.2, y: 3.84, w: 1.0, h: 0.42, margin: 0, fontFace: F.head, fontSize: 20, bold: true, color: C.yellow });
-  s.addText("180× faster", { x: bx + 1.32, y: 3.94, w: 1.16, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 10, color: C.yellow, align: "right" });
+  // Two colour-coded bars — a grey manual bar over a yellow automation bar. Deliberately not
+  // to scale: manual minutes against automation seconds is 30× and more, so a proportional
+  // automation bar is an invisible sliver (the earlier version's "nub"). The colour carries the
+  // manual-vs-ours read; the words carry the size of the gap. The exact seconds swing run to run
+  // with model latency, so the honest label is "Seconds", not a decimal that changes each time.
+  const bx = 9.86, bw = 2.6, barH = 0.5;
+  s.addText("MANUAL", { x: bx, y: 2.56, w: 2.2, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.6 });
+  s.addShape(pres.ShapeType.rect, { x: bx, y: 2.82, w: bw, h: barH, fill: { color: C.line }, line: { width: 0 } });
+  s.addText("~35 min", { x: bx + 0.2, y: 2.82, w: bw - 0.4, h: barH, margin: 0, fontFace: F.head, fontSize: 18, bold: true, color: C.white, valign: "middle" });
 
-  s.addShape(pres.ShapeType.line, { x: 9.94, y: 4.56, w: 2.44, h: 0, line: { color: C.line, width: 1 } });
-  stat(s, { x: 9.94, y: 4.7, w: 2.5, value: "~11 hrs", label: "saved per week at 20\nroutine investigations", size: 28 });
-  s.addText("The 11.8s is measured; the 35 minutes is an estimate the saving scales from.", {
-    x: 9.94, y: 5.96, w: 2.56, h: 0.44, margin: 0, fontFace: F.body, fontSize: 9, color: C.dim, italic: true, lineSpacing: 12,
-  });
-  s.addNotes("Be straight about the arithmetic. Run times are measured; the 35-minute baseline is an assumption printed on the slide. If pushed, offer to recompute with their number.");
+  s.addText("AUTOMATION", { x: bx, y: 3.56, w: 2.2, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.yellow, charSpacing: 1.6 });
+  s.addShape(pres.ShapeType.rect, { x: bx, y: 3.82, w: bw, h: barH, fill: { color: C.yellow }, line: { width: 0 } });
+  s.addText("Seconds", { x: bx + 0.2, y: 3.82, w: 1.05, h: barH, margin: 0, fontFace: F.head, fontSize: 18, bold: true, color: C.bg, valign: "middle" });
+  s.addText("30×+ faster", { x: bx + 1.3, y: 3.82, w: bw - 1.5, h: barH, margin: 0, fontFace: F.mono, fontSize: 10, bold: true, color: C.bg, align: "right", valign: "middle" });
+
+  s.addShape(pres.ShapeType.line, { x: 9.94, y: 4.68, w: 2.44, h: 0, line: { color: C.line, width: 1 } });
+  stat(s, { x: 9.94, y: 4.84, w: 2.5, value: "~11 hrs", label: "saved per week at 20\nroutine investigations", size: 28 });
+  s.addNotes("Honesty for questions: run times are real but vary run to run with model latency — every run I measured finished in seconds, so I claim 'seconds', not a fixed number. The ~35-minute manual baseline and the 20 investigations/week are estimates the ~11 hrs scales from; offer to recompute with their own numbers.");
 }
 
 /* ══════════════════════════ 14 — THE ROAD AHEAD ══════════════════════════
