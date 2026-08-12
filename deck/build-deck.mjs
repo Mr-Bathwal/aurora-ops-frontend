@@ -3,19 +3,21 @@
  * ── The organising idea ──────────────────────────────────────────────────────────────────────
  * EY's brand device reads left to right as Input → Inflection Point → Output. That is also,
  * exactly, what this product does: a symptom goes in, judgement happens, a verified answer comes
- * out. So the device is not decoration here — it is the spine. It opens the deck, it structures
- * the solution slide, and it recurs as a rule between sections.
+ * out. So the device is not decoration here — it is the spine.
  *
- * It is drawn as an abstraction — thin bar, marked inflection, thick bar — rather than as a copy
- * of the EY logo, which is trademarked and not ours to reproduce.
+ * ── Header system (a review correction) ──────────────────────────────────────────────────────
+ * Every slide leads with a plain consulting TITLE — "Problem Statement", "How It Works",
+ * "Architecture" — set large. The sharp one-liner is a SUBTITLE beneath it, deliberately smaller.
+ * A catchy line as the main heading does not tell the room what the slide is about; a standard
+ * title does, and the hook still lands one size down.
  *
- * ── Rules this is written against, all of them corrections from review ───────────────────────
- *   1. Short copy. Fragments, not paragraphs. A deck is spoken over, not read.
- *   2. Yellow means one thing: the eyebrow, a measured number, and the Aurora path. Never a
- *      highlighted phrase mid-sentence — doing that on one slide and not the next is what made
- *      the theming look accidental.
- *   3. Diagrams are drawn; screenshots are the product, at size, on their own slides.
- *   4. Every figure is measured or sourced. The single assumption is labelled as one, on the slide.
+ * ── Yellow, used for one thing (a review correction) ─────────────────────────────────────────
+ * Yellow marks: the beam, flow arrows, a card's accent edge, a measured number, the Aurora row
+ * in the comparison, and the closing thesis. It is NOT used to fill one node among its peers —
+ * a single yellow box in a row of grey ones reads as accidental, so every diagram node is grey
+ * and the flow is carried by yellow arrows instead.
+ *
+ * ── Every "title over content" pair keeps the title larger than its body. ────────────────────
  */
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
@@ -40,17 +42,10 @@ const C = {
 };
 const F = { head: "Arial", body: "Arial", mono: "Consolas" };
 
-/** True aspect ratios, measured when each image was captured. Images are fitted inside a box by
- *  these, so nothing is ever stretched. */
 const AR = {
-  "ss-console": 1.8356,
-  "ss-graph": 1.8148,
-  "ss-dashboard": 1.8399,
-  "ss-scene": 1.6252,
-  "ss-hosts": 2.9537,
-  "ss-run": 1.8407,
-  chart: 1.9608,
-  fleetgrid: 3.7742,
+  "ss-console": 1.8356, "ss-graph": 1.8148, "ss-dashboard": 1.8399,
+  "ss-scene": 1.6252, "ss-hosts": 2.9537, "ss-run": 1.8407,
+  chart: 1.9608, fleetgrid: 3.7742,
 };
 
 const img = (n) => ({ data: "image/png;base64," + readFileSync(resolve(HERE, "img", n + ".png")).toString("base64") });
@@ -62,54 +57,58 @@ pres.title = "Aurora Ops — Agentic IT Operations";
 
 /* ── The beam ─────────────────────────────────────────────────────────────────────────────── */
 
-/** Input, inflection, output — thin bar, marked point, thick bar. The deck's recurring device. */
 function beam(s, { x, y, w, scale = 1 }) {
   const thin = 0.045 * scale;
   const thick = 0.16 * scale;
   const knot = 0.15 * scale;
   const inflect = x + w * 0.36;
+  s.addShape(pres.ShapeType.rect, { x, y: y + (thick - thin) / 2, w: w * 0.36 - knot * 0.9, h: thin, fill: { color: C.dim }, line: { width: 0 } });
+  s.addShape(pres.ShapeType.rect, { x: inflect - knot / 2, y: y + (thick - knot) / 2, w: knot, h: knot, fill: { color: C.yellow }, line: { width: 0 } });
+  s.addShape(pres.ShapeType.rect, { x: inflect + knot * 0.7, y, w: x + w - (inflect + knot * 0.7), h: thick, fill: { color: C.yellow }, line: { width: 0 } });
+}
 
-  s.addShape(pres.ShapeType.rect, {
-    x, y: y + (thick - thin) / 2, w: w * 0.36 - knot * 0.9, h: thin,
-    fill: { color: C.dim }, line: { width: 0 },
+/* ── EY wordmark ──────────────────────────────────────────────────────────────────────────────
+ * A text wordmark plus the beam, top-right on every slide — brand presence without reproducing
+ * the proprietary logo geometry, which we do not hold. If the team has the official asset under
+ * their brand guidelines, drop it in over this. */
+function eyMark(s) {
+  s.addText("EY", {
+    x: 11.86, y: 0.32, w: 0.9, h: 0.44, margin: 0,
+    fontFace: F.head, fontSize: 22, bold: true, color: C.white, align: "right",
   });
-  s.addShape(pres.ShapeType.rect, {
-    x: inflect - knot / 2, y: y + (thick - knot) / 2, w: knot, h: knot,
-    fill: { color: C.yellow }, line: { width: 0 },
-  });
-  s.addShape(pres.ShapeType.rect, {
-    x: inflect + knot * 0.7, y, w: x + w - (inflect + knot * 0.7), h: thick,
-    fill: { color: C.yellow }, line: { width: 0 },
-  });
+  s.addShape(pres.ShapeType.rect, { x: 12.42, y: 0.78, w: 0.34, h: 0.06, fill: { color: C.yellow }, line: { width: 0 } });
 }
 
 /* ── Shared chrome ────────────────────────────────────────────────────────────────────────── */
 
-let page = 1; // the title slide is 01 and carries no footer
+let page = 1;
 
-function slide(eyebrow, title, opts = {}) {
+/** Title big, subtitle smaller. A yellow kicker tick is the recurring accent, identical on every
+ *  slide so the theme reads as deliberate rather than per-slide. */
+function slide(title, subtitle, opts = {}) {
   const s = pres.addSlide();
   s.background = { color: C.bg };
-  beam(s, { x: 0.62, y: 0.44, w: 1.15, scale: 0.62 });
-  s.addText(eyebrow.toUpperCase(), {
-    x: 0.62, y: 0.66, w: 9, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 11, bold: true, color: C.yellow, charSpacing: 2.6,
+  eyMark(s);
+
+  s.addShape(pres.ShapeType.rect, { x: 0.62, y: 0.6, w: 0.44, h: 0.055, fill: { color: C.yellow }, line: { width: 0 } });
+  s.addText(title, {
+    x: 0.6, y: 0.72, w: 10.6, h: 0.56, margin: 0,
+    fontFace: F.head, fontSize: opts.titleSize ?? 30, bold: true, color: C.white,
   });
+  if (subtitle) {
+    s.addText(subtitle, {
+      x: 0.62, y: 1.32, w: 11.4, h: 0.4, margin: 0,
+      fontFace: F.body, fontSize: 15, color: C.grey,
+    });
+  }
+
   page += 1;
   s.addShape(pres.ShapeType.line, { x: 12.06, y: 7.04, w: 0.42, h: 0, line: { color: C.yellow, width: 1.25 } });
   s.addText(String(page).padStart(2, "0"), {
     x: 11.9, y: 7.1, w: 0.75, h: 0.24, margin: 0,
     fontFace: F.mono, fontSize: 10, color: C.muted, align: "right",
   });
-  s.addText(title, {
-    x: 0.6, y: 0.98, w: opts.titleW ?? 12.1, h: 0.66, margin: 0,
-    fontFace: F.head, fontSize: opts.titleSize ?? 31, bold: true, color: C.white,
-  });
   return s;
-}
-
-function lede(s, text, { x = 0.62, y = 1.78, w = 11.9, h = 0.62, size = 13.5, color = C.grey } = {}) {
-  s.addText(text, { x, y, w, h, margin: 0, fontFace: F.body, fontSize: size, color, lineSpacing: size * 1.5 });
 }
 
 function card(s, { x, y, w, h, fill = C.panel, accent = false }) {
@@ -117,20 +116,18 @@ function card(s, { x, y, w, h, fill = C.panel, accent = false }) {
   if (accent) s.addShape(pres.ShapeType.rect, { x, y, w: 0.055, h, fill: { color: C.yellow }, line: { width: 0 } });
 }
 
-function node(s, { x, y, w, h, title, sub, on = false }) {
-  s.addShape(pres.ShapeType.rect, {
-    x, y, w, h,
-    fill: { color: on ? C.yellow : C.panel },
-    line: { color: on ? C.yellow : C.line, width: 1 },
-  });
+/** All nodes grey now — see the yellow note in the file header. Titled nodes keep the title
+ *  larger than the sub-label. */
+function node(s, { x, y, w, h, title, sub }) {
+  s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { color: C.panel }, line: { color: C.line, width: 1 } });
   s.addText(title, {
     x: x + 0.12, y: y + (sub ? 0.12 : (h - 0.42) / 2), w: w - 0.24, h: 0.42, margin: 0,
-    fontFace: F.head, fontSize: 12, bold: true, color: on ? C.bg : C.white, align: "center",
+    fontFace: F.head, fontSize: 12.5, bold: true, color: C.white, align: "center",
   });
   if (sub) {
     s.addText(sub, {
       x: x + 0.1, y: y + 0.58, w: w - 0.2, h: 0.46, margin: 0,
-      fontFace: F.mono, fontSize: 9, color: on ? C.bg : C.muted, align: "center", lineSpacing: 12,
+      fontFace: F.mono, fontSize: 9, color: C.muted, align: "center", lineSpacing: 12,
     });
   }
 }
@@ -140,25 +137,15 @@ function arrow(s, { x, y, w, color = C.muted }) {
 }
 
 function stat(s, { x, y, w, value, label, size = 40 }) {
-  s.addText(value, {
-    x, y, w, h: 0.64, margin: 0,
-    fontFace: F.head, fontSize: size, bold: true, color: C.yellow,
-  });
-  s.addText(label, {
-    x, y: y + 0.68, w, h: 0.52, margin: 0,
-    fontFace: F.body, fontSize: 11, color: C.grey, lineSpacing: 14,
-  });
+  s.addText(value, { x, y, w, h: 0.64, margin: 0, fontFace: F.head, fontSize: size, bold: true, color: C.yellow });
+  s.addText(label, { x, y: y + 0.68, w, h: 0.6, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 15 });
 }
 
-/** A screenshot in an EY mount: yellow top rule, charcoal surround, mono label beneath. The
- *  product is near-black, so an unframed capture on a charcoal slide reads as a hole rather
- *  than an exhibit. Fitted and centred, never stretched. */
 function shot(s, name, { x, y, w, h, label }) {
   const boxW = w - 0.24;
   const boxH = h - 0.06 - 0.18 - (label ? 0.36 : 0.12);
   const iw = Math.min(boxW, boxH * AR[name]);
   const ih = iw / AR[name];
-
   s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { color: C.panel }, line: { color: C.line, width: 0.75 } });
   s.addShape(pres.ShapeType.rect, { x, y, w, h: 0.06, fill: { color: C.yellow }, line: { width: 0 } });
   s.addImage({ ...img(name), x: x + (w - iw) / 2, y: y + 0.18 + (boxH - ih) / 2, w: iw, h: ih });
@@ -170,62 +157,111 @@ function shot(s, name, { x, y, w, h, label }) {
   }
 }
 
+/* ── Icons ────────────────────────────────────────────────────────────────────────────────────
+ * Drawn from primitive shapes rather than a font, so nothing depends on a glyph being installed.
+ * A yellow ring, and a simple white mark inside it. `seg` draws a line between any two points by
+ * placing its bounding box at the min corner and flipping to get the direction. */
+function seg(s, x1, y1, x2, y2, w = 2, col = C.white) {
+  s.addShape(pres.ShapeType.line, {
+    x: Math.min(x1, x2), y: Math.min(y1, y2),
+    w: Math.abs(x2 - x1) || 0.001, h: Math.abs(y2 - y1) || 0.001,
+    line: { color: col, width: w, capType: "rnd" },
+    flipH: x2 < x1, flipV: y2 < y1,
+  });
+}
+
+function icon(s, kind, cx, cy, r = 0.28) {
+  s.addShape(pres.ShapeType.ellipse, { x: cx - r, y: cy - r, w: 2 * r, h: 2 * r, fill: { type: "none" }, line: { color: C.yellow, width: 1.75 } });
+  const sq = (x, y) => s.addShape(pres.ShapeType.rect, { x, y, w: 0.07, h: 0.07, fill: { color: C.white }, line: { width: 0 } });
+  switch (kind) {
+    case "input": // a terminal prompt  ›_
+      seg(s, cx - 0.08, cy - 0.08, cx - 0.005, cy);
+      seg(s, cx - 0.005, cy, cx - 0.08, cy + 0.08);
+      seg(s, cx + 0.02, cy + 0.09, cx + 0.11, cy + 0.09);
+      break;
+    case "decision": // a decision diamond
+      s.addShape(pres.ShapeType.diamond, { x: cx - 0.1, y: cy - 0.1, w: 0.2, h: 0.2, fill: { type: "none" }, line: { color: C.white, width: 2 } });
+      break;
+    case "output": // a checkmark
+      seg(s, cx - 0.11, cy + 0.0, cx - 0.03, cy + 0.09, 2.5);
+      seg(s, cx - 0.03, cy + 0.09, cx + 0.12, cy - 0.1, 2.5);
+      break;
+    case "grid": // three-plus specialists — a 2×2 grid
+      sq(cx - 0.09, cy - 0.09); sq(cx + 0.02, cy - 0.09); sq(cx - 0.09, cy + 0.02); sq(cx + 0.02, cy + 0.02);
+      break;
+    case "branch": // routing — one line forking to two
+      seg(s, cx - 0.11, cy, cx - 0.01, cy);
+      seg(s, cx - 0.01, cy, cx + 0.1, cy - 0.08);
+      seg(s, cx - 0.01, cy, cx + 0.1, cy + 0.08);
+      break;
+    case "check": // acts then verifies
+      seg(s, cx - 0.1, cy + 0.0, cx - 0.03, cy + 0.08, 2.4);
+      seg(s, cx - 0.03, cy + 0.08, cx + 0.11, cy - 0.09, 2.4);
+      break;
+    case "eye": // every step visible
+      s.addShape(pres.ShapeType.ellipse, { x: cx - 0.13, y: cy - 0.08, w: 0.26, h: 0.16, fill: { type: "none" }, line: { color: C.white, width: 1.6 } });
+      s.addShape(pres.ShapeType.ellipse, { x: cx - 0.032, y: cy - 0.032, w: 0.064, h: 0.064, fill: { color: C.yellow }, line: { width: 0 } });
+      break;
+    case "shield": // works behind firewalls
+      seg(s, cx - 0.1, cy - 0.09, cx + 0.1, cy - 0.09, 1.9);
+      seg(s, cx - 0.1, cy - 0.09, cx, cy + 0.12, 1.9);
+      seg(s, cx + 0.1, cy - 0.09, cx, cy + 0.12, 1.9);
+      break;
+    case "lock": // read-only by default
+      s.addShape(pres.ShapeType.rect, { x: cx - 0.09, y: cy - 0.01, w: 0.18, h: 0.12, fill: { type: "none" }, line: { color: C.white, width: 1.6 } });
+      seg(s, cx - 0.05, cy - 0.01, cx - 0.05, cy - 0.07, 1.6);
+      seg(s, cx - 0.05, cy - 0.07, cx + 0.05, cy - 0.07, 1.6);
+      seg(s, cx + 0.05, cy - 0.07, cx + 0.05, cy - 0.01, 1.6);
+      break;
+  }
+}
+
 /* ══════════════════════════ 01 — TITLE ══════════════════════════ */
 {
   const s = pres.addSlide();
   s.background = { color: C.bg };
+  eyMark(s);
   beam(s, { x: 0.9, y: 2.28, w: 4.4, scale: 1.5 });
-  s.addText("Aurora Ops", {
-    x: 0.86, y: 2.84, w: 11, h: 1.12, margin: 0,
-    fontFace: F.head, fontSize: 60, bold: true, color: C.white,
-  });
-  s.addText("Agentic IT Operations", {
-    x: 0.9, y: 4.02, w: 11, h: 0.5, margin: 0,
-    fontFace: F.head, fontSize: 23, color: C.yellow,
-  });
-  s.addText("A symptom goes in. Judgement happens. A verified answer comes out.", {
-    x: 0.9, y: 4.68, w: 9.6, h: 0.4, margin: 0,
-    fontFace: F.body, fontSize: 14, color: C.grey,
-  });
+  s.addText("Aurora Ops", { x: 0.86, y: 2.84, w: 11, h: 1.12, margin: 0, fontFace: F.head, fontSize: 60, bold: true, color: C.white });
+  s.addText("Agentic IT Operations", { x: 0.9, y: 4.02, w: 11, h: 0.5, margin: 0, fontFace: F.head, fontSize: 23, color: C.yellow });
+  s.addText("A symptom goes in. Judgement happens. A verified answer comes out.", { x: 0.9, y: 4.68, w: 9.6, h: 0.4, margin: 0, fontFace: F.body, fontSize: 14, color: C.grey });
   s.addShape(pres.ShapeType.line, { x: 0.9, y: 5.56, w: 3.2, h: 0, line: { color: C.line, width: 1 } });
-  s.addText("Gourav Kumar Bathwal", {
-    x: 0.9, y: 5.72, w: 6, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 11.5, color: C.muted,
-  });
+  s.addText("Gourav Kumar Bathwal", { x: 0.9, y: 5.72, w: 6, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 11.5, color: C.muted });
 }
 
 /* ══════════════════════════ 02 — PROBLEM STATEMENT ══════════════════════════ */
 {
-  const s = slide("Problem statement", "Detection is solved. Judgement is not.");
-  lede(s, "Alarms have been automated for thirty years. Working out what an alarm means, and what to do about it, is still a person.", { w: 11.4 });
+  const s = slide("Problem Statement", "Detection is solved — judgement is not.");
 
   const stages = [
-    ["Detect", "automated since the 1990s", true],
-    ["Diagnose", "still a person", false],
-    ["Act & verify", "still a person", false],
+    ["Detect", "automated since the 1990s"],
+    ["Diagnose", "still done by a person"],
+    ["Act & verify", "still done by a person"],
   ];
-  stages.forEach(([t, sub, on], i) => {
+  stages.forEach(([t, sub], i) => {
     const x = 0.62 + i * 4.05;
-    node(s, { x, y: 2.62, w: 3.5, h: 1.12, title: t, sub, on });
-    if (i < 2) arrow(s, { x: x + 3.6, y: 3.18, w: 0.35 });
+    node(s, { x, y: 2.34, w: 3.5, h: 1.12, title: t, sub });
+    if (i < 2) arrow(s, { x: x + 3.6, y: 2.9, w: 0.35 });
   });
 
+  // Proofread: each label now reads as a complete sentence with its number, so "under 5%"
+  // is never left dangling next to an incomplete phrase.
   const stats = [
-    ["10,000+", "alerts a day reach\nan average operations team"],
-    ["under 5%", "of them actually\nneed a human"],
-    ["44%", "of organisations had an outage\nfrom an alert someone ignored"],
+    ["10,000+", "alerts reach the average\noperations team every day"],
+    ["Under 5%", "of those alerts actually\nneed a human to act"],
+    ["44%", "of organisations had an outage\nfrom an alert they had ignored"],
   ];
-  stats.forEach(([v, l], i) => stat(s, { x: 0.62 + i * 4.05, y: 4.32, w: 3.7, value: v, label: l, size: 36 }));
+  stats.forEach(([v, l], i) => stat(s, { x: 0.62 + i * 4.05, y: 4.2, w: 3.75, value: v, label: l, size: 34 }));
 
   s.addText("Source: 2026 State of Production Reliability survey — 1,039 SRE, DevOps and IT operations practitioners.", {
-    x: 0.62, y: 6.5, w: 10.5, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 9, color: C.dim,
+    x: 0.62, y: 6.56, w: 10.5, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 9, color: C.dim,
   });
   s.addNotes("Sit on the third statistic. That outage was not caused by missing information — somebody had already been told, and had learned to stop listening.");
 }
 
 /* ══════════════════════════ 03 — WHY IT PERSISTS ══════════════════════════ */
 {
-  const s = slide("Why it persists", "More monitoring made it worse");
-  lede(s, "The industry answered “we cannot see what is happening” with more alerts. It worked, and then it overshot.", { w: 11.4 });
+  const s = slide("Why It Persists", "More monitoring made the problem worse.");
 
   const chain = [
     ["More monitoring", "every system gains an alarm"],
@@ -235,8 +271,8 @@ function shot(s, name, { x, y, w, h, label }) {
   ];
   chain.forEach(([t, sub], i) => {
     const x = 0.62 + i * 3.06;
-    node(s, { x, y: 2.6, w: 2.62, h: 1.18, title: t, sub, on: i === 3 });
-    if (i < 3) arrow(s, { x: x + 2.68, y: 3.19, w: 0.3 });
+    node(s, { x, y: 2.32, w: 2.62, h: 1.18, title: t, sub });
+    if (i < 3) arrow(s, { x: x + 2.68, y: 2.91, w: 0.3 });
   });
 
   const why = [
@@ -246,256 +282,173 @@ function shot(s, name, { x, y, w, h, label }) {
   ];
   why.forEach(([t, b], i) => {
     const x = 0.62 + i * 4.05;
-    card(s, { x, y: 4.34, w: 3.72, h: 2.04, accent: true });
-    s.addText(t, {
-      x: x + 0.34, y: 4.62, w: 3.14, h: 0.34, margin: 0,
-      fontFace: F.head, fontSize: 14.5, bold: true, color: C.white,
-    });
-    s.addText(b, {
-      x: x + 0.34, y: 5.08, w: 3.1, h: 1.14, margin: 0,
-      fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16,
-    });
+    card(s, { x, y: 4.16, w: 3.72, h: 2.14, accent: true });
+    s.addText(t, { x: x + 0.34, y: 4.44, w: 3.14, h: 0.34, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.white });
+    s.addText(b, { x: x + 0.34, y: 4.92, w: 3.1, h: 1.24, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16 });
   });
   s.addNotes("The problem is not that IT is slow. It is that the obvious fix — more monitoring — is what produced the current failure mode.");
 }
 
-/* ══════════════════════════ 04 — SOLUTION OVERVIEW ══════════════════════════ */
+/* ══════════════════════════ 04 — SOLUTION ══════════════════════════ */
 {
-  const s = slide("Solution overview", "Input. Judgement. Verified output.");
-  lede(s, "An agent is given real tools on a real machine. It chooses which to run, reads what comes back, and decides what to do next itself.", { w: 11.4 });
+  const s = slide("Our Solution", "Input · Judgement · Verified output.");
 
-  beam(s, { x: 0.62, y: 2.74, w: 11.9, scale: 1.9 });
+  beam(s, { x: 0.62, y: 2.5, w: 11.9, scale: 1.9 });
 
   const parts = [
-    ["Input", "You describe the symptom", "“Disk is nearly full”, in your own words — not a\ncommand, and not the name of an agent.", 0.62],
-    ["Inflection", "Judgement happens here", "Which checks matter, in what order, and what the\nresults mean. This is the part nobody automated.", 4.86],
-    ["Output", "A verified answer", "Plain language, a one-word verdict, and the full\nrecord of every step it took to get there.", 9.1],
+    ["input", "Input", "You describe the symptom", "“Disk is nearly full”, in your own words —\nnot a command, not the name of an agent.", 0.62],
+    ["decision", "Inflection", "Judgement happens here", "Which checks matter, in what order, and what\nthe results mean. The part nobody automated.", 4.86],
+    ["output", "Output", "A verified answer", "Plain language, a one-word verdict, and the full\nrecord of every step it took to get there.", 9.1],
   ];
-  parts.forEach(([tag, head, body, x], i) => {
+  parts.forEach(([ic, tag, head, body, x], i) => {
+    icon(s, ic, x + 0.31, 3.42, 0.3);
     s.addText(tag.toUpperCase(), {
-      x, y: 3.92, w: 3.6, h: 0.26, margin: 0,
+      x: x + 0.78, y: 3.22, w: 3.0, h: 0.26, margin: 0,
       fontFace: F.mono, fontSize: 10, bold: true, color: i === 1 ? C.yellow : C.muted, charSpacing: 1.8,
     });
-    s.addText(head, {
-      x, y: 4.26, w: 3.9, h: 0.34, margin: 0,
-      fontFace: F.head, fontSize: 15, bold: true, color: C.white,
-    });
-    s.addText(body, {
-      x, y: 4.72, w: 3.86, h: 0.92, margin: 0,
-      fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16,
-    });
+    s.addText(head, { x: x + 0.78, y: 3.5, w: 3.3, h: 0.3, margin: 0, fontFace: F.head, fontSize: 13.5, bold: true, color: C.white });
+    s.addText(body, { x, y: 4.28, w: 3.9, h: 0.9, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16 });
   });
 
   s.addText("The middle block is the product. Everything either side of it already exists.", {
-    x: 0.62, y: 6.14, w: 9, h: 0.32, margin: 0,
-    fontFace: F.body, fontSize: 12.5, color: C.yellow,
+    x: 0.62, y: 5.94, w: 10, h: 0.34, margin: 0, fontFace: F.head, fontSize: 14, bold: true, color: C.yellow,
   });
   s.addNotes("Point at the yellow square. Input and output are commodity — a text box and a report. The judgement between them is what had no automation before agents.");
 }
 
 /* ══════════════════════════ 05 — HOW IT WORKS ══════════════════════════ */
 {
-  const s = slide("How it works", "It chooses its own next step");
-  lede(s, "Nothing in the code says that high memory means look at processes. It decides that from what the last check returned.", { w: 11.4 });
+  const s = slide("How It Works", "The agent chooses its own next step.");
 
-  card(s, { x: 0.62, y: 2.5, w: 6.1, h: 3.88 });
-  s.addText("THE LOOP INSIDE ONE AGENT", {
-    x: 0.96, y: 2.78, w: 5.2, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
-  });
-  node(s, { x: 1.5, y: 3.2, w: 4.3, h: 0.86, title: "The model decides", sub: "which tool to call next", on: true });
-  node(s, { x: 1.5, y: 4.74, w: 4.3, h: 0.86, title: "Your code runs it", sub: "a real reading from the machine" });
-  s.addShape(pres.ShapeType.line, { x: 2.2, y: 4.06, w: 0, h: 0.68, line: { color: C.yellow, width: 1.5, endArrowType: "triangle" } });
-  // Drawn downwards with the arrowhead on the *start*, so it points up. A negative height
-  // writes a negative extent into the XML, which PowerPoint rejects outright — the file opens
-  // fine in a zip reader and then will not open in PowerPoint at all.
-  s.addShape(pres.ShapeType.line, { x: 5.1, y: 4.06, w: 0, h: 1.54, line: { color: C.muted, width: 1.5, beginArrowType: "triangle" } });
-  s.addText("repeats until it has seen enough", {
-    x: 1.5, y: 5.78, w: 4.3, h: 0.28, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, color: C.muted, align: "center",
-  });
+  card(s, { x: 0.62, y: 2.16, w: 6.1, h: 4.16 });
+  s.addText("THE LOOP INSIDE ONE AGENT", { x: 0.96, y: 2.44, w: 5.2, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
+  node(s, { x: 1.5, y: 2.94, w: 4.3, h: 0.9, title: "The model decides", sub: "which tool to call next" });
+  node(s, { x: 1.5, y: 4.62, w: 4.3, h: 0.9, title: "Your code runs it", sub: "a real reading from the machine" });
+  s.addShape(pres.ShapeType.line, { x: 2.2, y: 3.84, w: 0, h: 0.78, line: { color: C.yellow, width: 1.5, endArrowType: "triangle" } });
+  s.addShape(pres.ShapeType.line, { x: 5.1, y: 3.84, w: 0, h: 0.78, line: { color: C.yellow, width: 1.5, beginArrowType: "triangle" } });
+  s.addText("repeats until it has seen enough", { x: 1.5, y: 5.68, w: 4.3, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 9.5, color: C.muted, align: "center" });
 
-  card(s, { x: 7.02, y: 2.5, w: 5.7, h: 3.88, accent: true });
-  s.addText("ONE REAL RUN, MEASURED", {
-    x: 7.36, y: 2.78, w: 5, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4,
-  });
+  card(s, { x: 7.02, y: 2.16, w: 5.7, h: 4.16, accent: true });
+  s.addText("ONE REAL RUN, MEASURED", { x: 7.36, y: 2.44, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4 });
   const facts = [
     ["11", "tools called, each chosen by the model"],
-    ["3.4s", "start to verified report"],
+    ["3.4s", "start to a verified report"],
     ["1", "word verdict — healthy, warning or critical"],
   ];
   facts.forEach(([v, l], i) => {
-    const y = 3.26 + i * 0.98;
-    s.addText(v, {
-      x: 7.36, y, w: 1.5, h: 0.56, margin: 0,
-      fontFace: F.head, fontSize: 27, bold: true, color: C.yellow,
-    });
-    s.addText(l, {
-      x: 9.0, y: y + 0.12, w: 3.4, h: 0.52, margin: 0,
-      fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 15,
-    });
+    const y = 2.98 + i * 1.02;
+    s.addText(v, { x: 7.36, y, w: 1.5, h: 0.56, margin: 0, fontFace: F.head, fontSize: 27, bold: true, color: C.yellow });
+    s.addText(l, { x: 9.0, y: y + 0.12, w: 3.4, h: 0.52, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 15 });
   });
   s.addText("Three specialists exist — health, logs, backup. A router reads your request and picks one.", {
-    x: 7.36, y: 5.9, w: 5.0, h: 0.4, margin: 0,
-    fontFace: F.body, fontSize: 11, color: C.muted, lineSpacing: 15,
+    x: 7.36, y: 5.94, w: 5.0, h: 0.4, margin: 0, fontFace: F.body, fontSize: 11, color: C.muted, lineSpacing: 15,
   });
   s.addNotes("If asked whether this is really agentic: nothing in the code says high memory should trigger a process check. The model chose that from what it had just read.");
 }
 
-/* ══════════════════════════ 06 — BETWEEN THE AGENTS ══════════════════════════ */
+/* ══════════════════════════ 06 — ORCHESTRATION ══════════════════════════ */
 {
-  const s = slide("Between the agents", "Inside, it decides. Between, we decide.");
-  lede(s, "The loop on the last slide has no fixed length. The route between agents does — we drew it, and it runs the same way every time.", { w: 11.4 });
+  const s = slide("Orchestration", "Inside, the AI decides — between, we do.");
 
-  /* Left — picking one specialist. Drawn as a spine rather than three diagonals: diagonal
-     connectors at this size read as noise, and a spine makes the fan-out obvious. */
-  card(s, { x: 0.62, y: 2.5, w: 5.86, h: 3.9 });
-  s.addText("PICKING ONE SPECIALIST", {
-    x: 0.96, y: 2.78, w: 5, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
-  });
-  node(s, { x: 1.0, y: 3.99, w: 1.9, h: 1.1, title: "Router", sub: "reads your words", on: true });
-  s.addShape(pres.ShapeType.line, { x: 2.9, y: 4.54, w: 0.45, h: 0, line: { color: C.yellow, width: 1.5 } });
-  s.addShape(pres.ShapeType.line, { x: 3.35, y: 3.58, w: 0, h: 1.92, line: { color: C.yellow, width: 1.5 } });
+  card(s, { x: 0.62, y: 2.16, w: 5.86, h: 4.22 });
+  s.addText("PICKING ONE SPECIALIST", { x: 0.96, y: 2.44, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
+  node(s, { x: 1.0, y: 3.7, w: 1.9, h: 1.1, title: "Router", sub: "reads your words" });
+  s.addShape(pres.ShapeType.line, { x: 2.9, y: 4.25, w: 0.45, h: 0, line: { color: C.yellow, width: 1.5 } });
+  s.addShape(pres.ShapeType.line, { x: 3.35, y: 3.29, w: 0, h: 1.92, line: { color: C.yellow, width: 1.5 } });
   ["System Health", "Log Analyzer", "Backup & DR"].forEach((t, i) => {
-    const cy = 3.58 + i * 0.96;
+    const cy = 3.29 + i * 0.96;
     arrow(s, { x: 3.35, y: cy, w: 0.5, color: C.yellow });
     node(s, { x: 3.85, y: cy - 0.38, w: 2.25, h: 0.76, title: t });
   });
 
-  /* Right — the chain, with its one branch. */
-  card(s, { x: 6.86, y: 2.5, w: 5.86, h: 3.9, accent: true });
-  s.addText("DIAGNOSE, DECIDE, ACT, VERIFY", {
-    x: 7.2, y: 2.78, w: 5, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4,
+  card(s, { x: 6.86, y: 2.16, w: 5.86, h: 4.22, accent: true });
+  s.addText("DIAGNOSE · DECIDE · ACT · VERIFY", { x: 7.2, y: 2.44, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4 });
+  const steps = ["Read the evidence", "Does it need a fix?", "Take the fix", "Check it actually worked"];
+  steps.forEach((t, i) => {
+    node(s, { x: 7.3, y: 2.86 + i * 0.8, w: 5.0, h: 0.58, title: t });
+    if (i < 3) s.addShape(pres.ShapeType.line, { x: 9.8, y: 3.44 + i * 0.8, w: 0, h: 0.22, line: { color: C.yellow, width: 1.4, endArrowType: "triangle" } });
   });
-  const rows = [
-    ["Read the evidence", "the log reader writes a diagnosis", 7.3, 5.0, false],
-    ["Does it need a fix?", "one decision, one word", 7.3, 5.0, true],
-  ];
-  rows.forEach(([t, sub, x, w, on], i) => {
-    node(s, { x, y: 3.2 + i * 0.86, w, h: 0.62, title: t, on });
-    s.addShape(pres.ShapeType.line, { x: 9.8, y: 3.82 + i * 0.86, w: 0, h: 0.24, line: { color: C.muted, width: 1.4, endArrowType: "triangle" } });
+  s.addText("No fix needed? It skips straight to verifying.", {
+    x: 7.3, y: 6.14, w: 5.0, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9.5, color: C.dim, align: "center",
   });
-  node(s, { x: 7.3, y: 4.92, w: 2.38, h: 0.62, title: "Take the fix" });
-  s.addText("or skip it entirely", {
-    x: 9.94, y: 5.04, w: 2.38, h: 0.38, margin: 0,
-    fontFace: F.mono, fontSize: 10.5, color: C.dim,
-  });
-  s.addShape(pres.ShapeType.line, { x: 9.8, y: 5.54, w: 0, h: 0.24, line: { color: C.muted, width: 1.4, endArrowType: "triangle" } });
-  node(s, { x: 7.3, y: 5.78, w: 5.0, h: 0.62, title: "Check it actually worked", on: true });
-
-  s.addNotes("Left: you do not need to know which specialist owns your problem. Right: the fix is skipped entirely when the diagnosis does not call for it — and the last step exists to check the work rather than assume it.");
+  s.addNotes("Left: you do not need to know which specialist owns your problem. Right: the fix is skipped when the diagnosis does not call for it — and the last step checks the work rather than assuming it.");
 }
 
 /* ══════════════════════════ 07 — FEATURES ══════════════════════════ */
 {
-  const s = slide("Features", "What it does");
+  const s = slide("Features", "Built as a product, not a prototype.");
 
   const feats = [
-    ["Three specialists", "Health, logs, backup. Each holds only its own tools."],
-    ["Plain-English routing", "Describe a symptom; it picks the right agent."],
-    ["Acts, then verifies", "Takes the fix and confirms it actually worked."],
-    ["Every step visible", "The full record of what it ran and what came back."],
-    ["Works behind firewalls", "The machine calls out; nothing inbound is opened."],
-    ["Read-only by default", "Only one agent can change anything, and only backups."],
+    ["grid", "Three specialists", "Health, logs, backup — each holds only its own tools."],
+    ["branch", "Plain-English routing", "Describe a symptom; it picks the right agent for you."],
+    ["check", "Acts, then verifies", "Takes the fix and confirms it actually worked."],
+    ["eye", "Every step visible", "The full record of what it ran and what came back."],
+    ["shield", "Works behind firewalls", "The machine calls out; nothing inbound is opened."],
+    ["lock", "Read-only by default", "Only one agent can change anything, and only backups."],
   ];
-  feats.forEach(([t, b], i) => {
+  feats.forEach(([ic, t, b], i) => {
     const x = 0.62 + (i % 3) * 4.05;
-    const y = 2.1 + Math.floor(i / 3) * 2.24;
-    card(s, { x, y, w: 3.72, h: 1.92, accent: true });
-    s.addText(t, {
-      x: x + 0.34, y: y + 0.3, w: 3.2, h: 0.34, margin: 0,
-      fontFace: F.head, fontSize: 14.5, bold: true, color: C.white,
-    });
-    s.addText(b, {
-      x: x + 0.34, y: y + 0.78, w: 3.14, h: 0.9, margin: 0,
-      fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16,
-    });
+    const y = 2.12 + Math.floor(i / 3) * 2.2;
+    card(s, { x, y, w: 3.72, h: 1.94, accent: true });
+    icon(s, ic, x + 0.55, y + 0.5, 0.24);
+    s.addText(t, { x: x + 0.34, y: y + 0.88, w: 3.14, h: 0.34, margin: 0, fontFace: F.head, fontSize: 14, bold: true, color: C.white });
+    s.addText(b, { x: x + 0.34, y: y + 1.26, w: 3.1, h: 0.56, margin: 0, fontFace: F.body, fontSize: 11, color: C.grey, lineSpacing: 15 });
   });
 }
 
-/* ══════════════════════════ 08 — HOW IT REACHES MACHINES ══════════════════════════ */
+/* ══════════════════════════ 08 — FLEET CONNECTIVITY ══════════════════════════ */
 {
-  const s = slide("Reaching your machines", "They call us. We never call them.");
-  lede(s, "A firewall blocks strangers coming in and allows staff going out. So the machine does the calling — which is why this works on any network without asking anyone's permission.", { w: 11.4 });
+  const s = slide("Fleet Connectivity", "They call us — we never call them.");
 
-  card(s, { x: 0.62, y: 2.66, w: 4.3, h: 2.72 });
-  s.addText("OUR SERVER", {
-    x: 0.96, y: 2.94, w: 3.6, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
-  });
-  s.addText("Pins a job to a list,\nthen waits.\n\nNever leaves the building.", {
-    x: 0.96, y: 3.36, w: 3.6, h: 1.6, margin: 0,
-    fontFace: F.body, fontSize: 12.5, color: C.grey, lineSpacing: 18,
-  });
+  card(s, { x: 0.62, y: 2.4, w: 4.3, h: 2.72 });
+  s.addText("OUR SERVER", { x: 0.96, y: 2.68, w: 3.6, h: 0.26, margin: 0, fontFace: F.head, fontSize: 13, bold: true, color: C.white });
+  s.addText("Pins a job to a list, then waits.\n\nNever leaves the building.", { x: 0.96, y: 3.16, w: 3.6, h: 1.6, margin: 0, fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 18 });
 
-  card(s, { x: 8.42, y: 2.66, w: 4.3, h: 2.72, accent: true });
-  s.addText("THEIR MACHINE", {
-    x: 8.76, y: 2.94, w: 3.6, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4,
-  });
-  s.addText("A small program asks\nevery 3 seconds.\n\nDoes the work locally.", {
-    x: 8.76, y: 3.36, w: 3.6, h: 1.6, margin: 0,
-    fontFace: F.body, fontSize: 12.5, color: C.grey, lineSpacing: 18,
-  });
+  card(s, { x: 8.42, y: 2.4, w: 4.3, h: 2.72, accent: true });
+  s.addText("THEIR MACHINE", { x: 8.76, y: 2.68, w: 3.6, h: 0.26, margin: 0, fontFace: F.head, fontSize: 13, bold: true, color: C.white });
+  s.addText("A small program asks every 3 seconds.\n\nDoes the work locally.", { x: 8.76, y: 3.16, w: 3.6, h: 1.6, margin: 0, fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 18 });
 
-  /* Every arrow points the same way. That is the whole slide. */
   const hops = [
-    ["Enrol — once, with a one-time pass", 3.12],
-    ["Anything for me? — every 3 seconds", 3.86],
-    ["Here is the answer", 4.6],
+    ["Enrol — once, with a one-time pass", 2.86],
+    ["Anything for me? — every 3 seconds", 3.6],
+    ["Here is the answer", 4.34],
   ];
   hops.forEach(([label, y]) => {
-    s.addShape(pres.ShapeType.line, {
-      x: 5.08, y, w: 3.26, h: 0,
-      line: { color: C.yellow, width: 1.6, beginArrowType: "triangle" },
-    });
-    s.addText(label, {
-      x: 5.08, y: y - 0.34, w: 3.26, h: 0.28, margin: 0,
-      fontFace: F.mono, fontSize: 9.5, color: C.yellow, align: "center",
-    });
+    s.addShape(pres.ShapeType.line, { x: 5.08, y, w: 3.26, h: 0, line: { color: C.yellow, width: 1.6, beginArrowType: "triangle" } });
+    s.addText(label, { x: 5.08, y: y - 0.34, w: 3.26, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 9.5, color: C.yellow, align: "center" });
   });
 
-  s.addShape(pres.ShapeType.line, { x: 5.6, y: 5.72, w: 2.2, h: 0, line: { color: C.line, width: 1.4, dashType: "dash" } });
-  s.addText("✕", {
-    x: 6.44, y: 5.5, w: 0.5, h: 0.4, margin: 0,
-    fontFace: F.head, fontSize: 17, bold: true, color: C.dim, align: "center",
-  });
+  s.addShape(pres.ShapeType.line, { x: 5.6, y: 5.46, w: 2.2, h: 0, line: { color: C.line, width: 1.4, dashType: "dash" } });
+  seg(s, 6.56, 5.34, 6.8, 5.58, 1.8, C.dim);
+  seg(s, 6.8, 5.34, 6.56, 5.58, 1.8, C.dim);
   s.addText("No connection ever runs this way — nothing inbound is opened on their network.", {
-    x: 0.62, y: 6.1, w: 11.9, h: 0.32, margin: 0,
-    fontFace: F.body, fontSize: 12.5, color: C.grey, align: "center",
+    x: 0.62, y: 5.86, w: 11.9, h: 0.32, margin: 0, fontFace: F.body, fontSize: 12.5, color: C.grey, align: "center",
   });
-
-  s.addNotes("This is the slide that answers 'how would you ever get into a customer's network?'. You do not. They come to you, and that is why no firewall change is needed.");
+  s.addNotes("This answers 'how would you ever get into a customer's network?'. You do not. They come to you, and that is why no firewall change is needed.");
 }
 
 /* ══════════════════════════ 09 — APPLICATION SNAPSHOTS ══════════════════════════ */
 {
-  const s = slide("Application snapshots", "The running product");
+  const s = slide("Application Snapshots", "The running product, not mockups.");
 
-  const BW = 5.9, BH = 2.42, GX = 0.3, GY = 0.2, X0 = 0.62, Y0 = 1.9;
+  const BW = 5.9, BH = 2.34, GX = 0.3, GY = 0.2, X0 = 0.62, Y0 = 1.94;
   const cell = (c, r) => ({ x: X0 + c * (BW + GX), y: Y0 + r * (BH + GY), w: BW, h: BH });
-
   shot(s, "ss-console",   { ...cell(0, 0), label: "Run an agent — ask on the left, watch on the right" });
   shot(s, "ss-graph",     { ...cell(1, 0), label: "The remediation chain the backend actually walks" });
   shot(s, "ss-dashboard", { ...cell(0, 1), label: "Every run recorded, scored and broken down" });
   shot(s, "ss-hosts",     { ...cell(1, 1), label: "The fleet — enrolled machines, and pending ones" });
 }
 
-/* ══════════════════════════ 08 — INSIDE A RUN ══════════════════════════ */
+/* ══════════════════════════ 10 — INSIDE A RUN ══════════════════════════ */
 {
-  const s = slide("Inside a run", "Nothing is hidden");
-  lede(s, "A real System Health run, captured from the product. Eleven tools chosen by the model, every result shown, and the verdict it reached.", { w: 11.4 });
-
-  shot(s, "ss-run", { x: 1.66, y: 2.5, w: 10.0, h: 4.32, label: "The plan, then every tool call and its result — beside the verdict" });
+  const s = slide("Inside a Run", "Every step the agent took, in full.");
+  shot(s, "ss-run", { x: 1.66, y: 2.0, w: 10.0, h: 4.6, label: "The plan, then every tool call and its result — beside the verdict" });
   s.addNotes("The trust slide. CPU 23.2%, memory 86.3%, disk 59.6% — real readings from this laptop, not a mockup. If anyone asks whether the output is genuine, this is the answer.");
 }
 
-/* ══════════════════════════ 09 — TECHNOLOGY STACK AND DATA FLOW ══════════════════════════ */
+/* ══════════════════════════ 11 — ARCHITECTURE ══════════════════════════ */
 {
-  const s = slide("Technology stack and data flow", "How a request becomes a verified report");
+  const s = slide("Architecture", "How a request becomes a verified report.");
 
   const chain = [
     ["Browser", "Next.js console"],
@@ -506,17 +459,14 @@ function shot(s, name, { x, y, w, h, label }) {
   ];
   chain.forEach(([t, sub], i) => {
     const x = 0.62 + i * 2.45;
-    node(s, { x, y: 2.16, w: 2.06, h: 1.14, title: t, sub, on: i === 3 });
+    node(s, { x, y: 2.16, w: 2.06, h: 1.14, title: t, sub });
     if (i < 4) arrow(s, { x: x + 2.12, y: 2.73, w: 0.28, color: C.yellow });
   });
 
   s.addShape(pres.ShapeType.line, { x: 10.42, y: 3.44, w: 0, h: 0.36, line: { color: C.yellow, width: 1.5 } });
   s.addShape(pres.ShapeType.line, { x: 8.0, y: 3.8, w: 2.42, h: 0, line: { color: C.yellow, width: 1.5 } });
   s.addShape(pres.ShapeType.line, { x: 8.0, y: 3.44, w: 0, h: 0.36, line: { color: C.yellow, width: 1.5, endArrowType: "triangle" } });
-  s.addText("repeats until the agent has seen enough", {
-    x: 7.4, y: 3.86, w: 3.9, h: 0.28, margin: 0,
-    fontFace: F.mono, fontSize: 10, color: C.yellow, align: "center",
-  });
+  s.addText("repeats until the agent has seen enough", { x: 7.4, y: 3.86, w: 3.9, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 10, color: C.yellow, align: "center" });
 
   const cols = [
     ["Console", "Next.js 16 · React 19\nTailwind v4\nframer-motion"],
@@ -526,21 +476,15 @@ function shot(s, name, { x, y, w, h, label }) {
   cols.forEach(([t, b], i) => {
     const x = 0.62 + i * 4.05;
     card(s, { x, y: 4.48, w: 3.72, h: 1.9, accent: true });
-    s.addText(t.toUpperCase(), {
-      x: x + 0.34, y: 4.74, w: 3.1, h: 0.28, margin: 0,
-      fontFace: F.mono, fontSize: 10.5, bold: true, color: C.yellow, charSpacing: 1.8,
-    });
-    s.addText(b, {
-      x: x + 0.34, y: 5.1, w: 3.14, h: 1.06, margin: 0,
-      fontFace: F.mono, fontSize: 11.5, color: C.grey, lineSpacing: 17,
-    });
+    // Title larger than the body beneath it (was smaller — a review correction).
+    s.addText(t, { x: x + 0.34, y: 4.72, w: 3.1, h: 0.3, margin: 0, fontFace: F.head, fontSize: 14, bold: true, color: C.white });
+    s.addText(b, { x: x + 0.34, y: 5.16, w: 3.14, h: 1.06, margin: 0, fontFace: F.mono, fontSize: 11, color: C.grey, lineSpacing: 16 });
   });
 }
 
-/* ══════════════════════════ 10 — COMPETITIVE LANDSCAPE ══════════════════════════ */
+/* ══════════════════════════ 12 — COMPETITIVE LANDSCAPE ══════════════════════════ */
 {
-  const s = slide("Competitive landscape", "Everyone stops somewhere");
-  lede(s, "The category splits two ways: tools that need a large observability estate before they help, and tools that stop at the diagnosis.", { w: 11.4 });
+  const s = slide("Competitive Landscape", "Everyone else stops somewhere.");
 
   const heads = ["", "Needs an estate", "Diagnoses", "Acts on it", "Verifies"];
   const rows = [
@@ -556,15 +500,12 @@ function shot(s, name, { x, y, w, h, label }) {
 
   heads.forEach((h, i) => {
     if (!h) return;
-    s.addText(h.toUpperCase(), {
-      x: colX[i], y: 2.66, w: colW[i], h: 0.26, margin: 0,
-      fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2,
-    });
+    s.addText(h.toUpperCase(), { x: colX[i], y: 2.4, w: colW[i], h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2 });
   });
   rows.forEach((r, ri) => {
-    const y = 3.02 + ri * 0.5;
+    const y = 2.78 + ri * 0.52;
     const ours = ri === 5;
-    if (ours) s.addShape(pres.ShapeType.rect, { x: 0.5, y: y - 0.08, w: 9.26, h: 0.46, fill: { color: C.panel2 }, line: { width: 0 } });
+    if (ours) s.addShape(pres.ShapeType.rect, { x: 0.5, y: y - 0.08, w: 9.26, h: 0.48, fill: { color: C.panel2 }, line: { width: 0 } });
     r.forEach((cell, ci) => {
       s.addText(cell, {
         x: colX[ci], y, w: colW[ci], h: 0.3, margin: 0,
@@ -575,154 +516,104 @@ function shot(s, name, { x, y, w, h, label }) {
     });
   });
 
-  card(s, { x: 10.06, y: 2.58, w: 2.66, h: 3.86, accent: true });
-  s.addText("WHERE WE WIN", {
-    x: 10.4, y: 2.86, w: 2.1, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4,
-  });
+  card(s, { x: 10.06, y: 2.3, w: 2.66, h: 4.06, accent: true });
+  s.addText("WHERE WE WIN", { x: 10.4, y: 2.58, w: 2.1, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4 });
   const wins = [
     ["No estate needed", "They need Kubernetes or a full observability stack. We need a machine."],
     ["We close the loop", "Cleric is read-only by design — a safety feature, and a ceiling."],
     ["We check our work", "A supervisor states whether it is actually resolved."],
   ];
   wins.forEach(([t, b], i) => {
-    const y = 3.28 + i * 1.04;
-    s.addText(t, {
-      x: 10.4, y, w: 2.14, h: 0.28, margin: 0,
-      fontFace: F.head, fontSize: 12, bold: true, color: C.white,
-    });
-    s.addText(b, {
-      x: 10.4, y: y + 0.3, w: 2.1, h: 0.7, margin: 0,
-      fontFace: F.body, fontSize: 10, color: C.grey, lineSpacing: 13.5,
-    });
+    const y = 3.02 + i * 1.08;
+    s.addText(t, { x: 10.4, y, w: 2.14, h: 0.28, margin: 0, fontFace: F.head, fontSize: 12.5, bold: true, color: C.white });
+    s.addText(b, { x: 10.4, y: y + 0.32, w: 2.1, h: 0.72, margin: 0, fontFace: F.body, fontSize: 10, color: C.grey, lineSpacing: 13.5 });
   });
 
   s.addText("Said honestly: correlating findings across many machines is where the funded players are ahead. That is our roadmap, not our claim.", {
-    x: 0.62, y: 6.5, w: 11.9, h: 0.32, margin: 0,
-    fontFace: F.body, fontSize: 11, color: C.muted,
+    x: 0.62, y: 6.5, w: 11.9, h: 0.32, margin: 0, fontFace: F.body, fontSize: 11, color: C.muted,
   });
   s.addNotes("Do not oversell. The strong, true claim is the first column: everyone else needs an estate we do not. Cleric's own positioning — read-only by design — is the cleanest proof that closing the loop is genuinely differentiated.");
 }
 
-/* ══════════════════════════ 11 — OUTCOMES AND IMPACT ══════════════════════════ */
+/* ══════════════════════════ 13 — OUTCOMES & IMPACT ══════════════════════════ */
 {
-  const s = slide("Outcomes and impact", "What changes when judgement is automated");
+  const s = slide("Outcomes & Impact", "What automating judgement actually saves.");
 
-  s.addText("MEASURED ON THIS MACHINE", {
-    x: 0.62, y: 2.02, w: 5, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
-  });
+  s.addText("MEASURED ON THIS MACHINE", { x: 0.62, y: 2.02, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
   const runs = [
-    ["1.4s", "targeted question\n2 tool calls"],
-    ["3.4s", "full health check\n7 tool calls"],
-    ["11.8s", "diagnose, act, verify\n2 agents, 4 stages"],
+    ["1.4s", "for a targeted question\n(2 tool calls)"],
+    ["3.4s", "for a full health check\n(7 tool calls)"],
+    ["11.8s", "to diagnose, act and verify\n(2 agents, 4 stages)"],
   ];
-  runs.forEach(([v, l], i) => stat(s, { x: 0.62 + i * 2.72, y: 2.4, w: 2.5, value: v, label: l, size: 32 }));
+  runs.forEach(([v, l], i) => stat(s, { x: 0.62 + i * 2.72, y: 2.4, w: 2.55, value: v, label: l, size: 32 }));
 
-  s.addText("WHAT THAT CHANGES", {
-    x: 0.62, y: 4.16, w: 5, h: 0.26, margin: 0,
-    fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4,
-  });
+  s.addText("WHAT THAT CHANGES", { x: 0.62, y: 4.16, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
   const gains = [
-    ["Time to a verified answer", "35 min", "11.8 s"],
-    ["Checks per investigation", "what you remember", "up to 11, chosen"],
-    ["Record of what was done", "a ticket comment", "every tool call"],
+    ["Time to a verified answer", "about 35 minutes", "11.8 seconds"],
+    ["Checks per investigation", "whatever you recall", "up to 11, chosen live"],
+    ["Record of what was done", "a ticket comment", "every tool call, logged"],
   ];
   gains.forEach(([label, before, after], i) => {
     const y = 4.54 + i * 0.6;
     s.addText(label, { x: 0.62, y, w: 3.3, h: 0.3, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey });
-    s.addText(before, { x: 4.06, y, w: 2.1, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.dim });
-    s.addShape(pres.ShapeType.line, { x: 6.3, y: y + 0.14, w: 0.3, h: 0, line: { color: C.yellow, width: 1.25, endArrowType: "triangle" } });
-    s.addText(after, { x: 6.82, y, w: 2.5, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.yellow });
+    s.addText(before, { x: 4.06, y, w: 2.2, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.dim });
+    s.addShape(pres.ShapeType.line, { x: 6.4, y: y + 0.14, w: 0.3, h: 0, line: { color: C.yellow, width: 1.25, endArrowType: "triangle" } });
+    s.addText(after, { x: 6.92, y, w: 2.5, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.yellow });
   });
 
   card(s, { x: 9.6, y: 1.96, w: 3.12, h: 4.46, accent: true });
-  s.addText("TIME TO A VERIFIED ANSWER", {
-    x: 9.94, y: 2.26, w: 2.6, h: 0.42, margin: 0,
-    fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2,
-  });
+  s.addText("TIME TO A VERIFIED ANSWER", { x: 9.94, y: 2.26, w: 2.6, h: 0.42, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2 });
   s.addText("Manual", { x: 9.94, y: 2.8, w: 1.0, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11, color: C.grey });
   s.addShape(pres.ShapeType.rect, { x: 9.94, y: 3.1, w: 2.44, h: 0.28, fill: { color: C.line }, line: { width: 0 } });
   s.addText("~35 min", { x: 11.06, y: 2.78, w: 1.34, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.grey, align: "right" });
-
-  s.addText("Aurora Ops", { x: 9.94, y: 3.54, w: 1.08, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11, color: C.white });
+  s.addText("Aurora Ops", { x: 9.94, y: 3.54, w: 1.05, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11, color: C.white });
   s.addShape(pres.ShapeType.rect, { x: 9.94, y: 3.84, w: 0.14, h: 0.28, fill: { color: C.yellow }, line: { width: 0 } });
   s.addText("11.8 s", { x: 11.06, y: 3.52, w: 1.34, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.yellow, align: "right" });
-
   s.addShape(pres.ShapeType.line, { x: 9.94, y: 4.4, w: 2.44, h: 0, line: { color: C.line, width: 1 } });
   stat(s, { x: 9.94, y: 4.58, w: 2.5, value: "~11 hrs", label: "saved per week at 20\nroutine investigations", size: 30 });
   s.addText("The 11.8s is measured. The 35 minutes is an estimate, and the saving scales from it.", {
-    x: 9.94, y: 5.88, w: 2.56, h: 0.48, margin: 0,
-    fontFace: F.body, fontSize: 9.5, color: C.dim, italic: true, lineSpacing: 12.5,
+    x: 9.94, y: 5.9, w: 2.56, h: 0.48, margin: 0, fontFace: F.body, fontSize: 9.5, color: C.dim, italic: true, lineSpacing: 12.5,
   });
   s.addNotes("Be straight about the arithmetic. Run times are measured; the 35-minute baseline is an assumption printed on the slide. If pushed, offer to recompute with their number.");
 }
 
-/* ══════════════════════════ 12 — CLOSE ══════════════════════════ */
+/* ══════════════════════════ 14 — ROADMAP & CLOSE ══════════════════════════ */
 {
-  const s = slide("Where this goes", "Working today, and what comes next");
+  const s = slide("Roadmap", "Working today, and what comes next.");
 
-  const now = [
-    "Three agents on live machine data",
-    "Orchestrated routing and auto-remediation",
-    "Fleet enrolment over SSH or an agent daemon",
-  ];
-  const next = [
-    "Correlate findings across many machines",
-    "Read logs from Splunk, Loki and CloudWatch",
-    "Widen safe action beyond backup and recovery",
-  ];
+  const now = ["Three agents on live machine data", "Orchestrated routing and auto-remediation", "Fleet enrolment over SSH or an agent daemon"];
+  const next = ["Correlate findings across many machines", "Read logs from Splunk, Loki and CloudWatch", "Widen safe action beyond backup and recovery"];
 
-  // The roadmap, compressed to the top half so the thesis below it is what the slide is
-  // actually about. This is the slide that stays on screen through every question.
   [["Working today", now, true], ["Next", next, false]].forEach(([title, items, on], ci) => {
     const x = 0.62 + ci * 6.15;
-    card(s, { x, y: 1.94, w: 5.83, h: 2.56, accent: on });
-    s.addText(title.toUpperCase(), {
-      x: x + 0.36, y: 2.2, w: 4.9, h: 0.28, margin: 0,
-      fontFace: F.mono, fontSize: 10.5, bold: true, color: on ? C.yellow : C.muted, charSpacing: 1.8,
-    });
+    card(s, { x, y: 1.96, w: 5.83, h: 2.5, accent: on });
+    s.addText(title.toUpperCase(), { x: x + 0.36, y: 2.2, w: 4.9, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 10.5, bold: true, color: on ? C.yellow : C.muted, charSpacing: 1.8 });
     items.forEach((t, i) => {
-      const y = 2.72 + i * 0.56;
+      const y = 2.72 + i * 0.54;
       s.addShape(pres.ShapeType.rect, { x: x + 0.36, y: y + 0.11, w: 0.16, h: 0.03, fill: { color: on ? C.yellow : C.line }, line: { width: 0 } });
-      s.addText(t, {
-        x: x + 0.68, y, w: 4.85, h: 0.44, margin: 0,
-        fontFace: F.body, fontSize: 12.5, color: on ? C.white : C.grey, lineSpacing: 16,
-      });
+      s.addText(t, { x: x + 0.68, y, w: 4.85, h: 0.44, margin: 0, fontFace: F.body, fontSize: 12.5, color: on ? C.white : C.grey, lineSpacing: 16 });
     });
   });
 
-  // The close, and a deliberate bookend: slide 02 is titled "Detection is solved. Judgement is
-  // not." This answers that exact sentence. The thesis, not a roadmap or a URL, is the last
-  // thing on the screen while questions are taken.
-  beam(s, { x: 0.62, y: 5.06, w: 2.9, scale: 0.85 });
-  s.addText("Detection was solved thirty years ago.", {
-    x: 0.6, y: 5.34, w: 12, h: 0.5, margin: 0,
-    fontFace: F.head, fontSize: 22, color: C.grey,
-  });
-  s.addText("We automated the judgement.", {
-    x: 0.6, y: 5.88, w: 12, h: 0.56, margin: 0,
-    fontFace: F.head, fontSize: 28, bold: true, color: C.yellow,
-  });
+  // The bookend: slide 02 posed "Detection is solved — judgement is not." This answers it, and
+  // the thesis — not a roadmap or a URL — is what stays on screen through the questions.
+  beam(s, { x: 0.62, y: 5.04, w: 2.9, scale: 0.85 });
+  s.addText("Detection was solved thirty years ago.", { x: 0.6, y: 5.32, w: 12, h: 0.5, margin: 0, fontFace: F.head, fontSize: 22, color: C.grey });
+  s.addText("We automated the judgement.", { x: 0.6, y: 5.86, w: 12, h: 0.56, margin: 0, fontFace: F.head, fontSize: 28, bold: true, color: C.yellow });
   s.addText("github.com/Mr-Bathwal/aurora-ops-frontend   ·   github.com/Mr-Bathwal/aurora-ops-hub", {
-    x: 0.62, y: 6.72, w: 11.9, h: 0.3, margin: 0,
-    fontFace: F.mono, fontSize: 10.5, color: C.muted,
+    x: 0.62, y: 6.72, w: 11.9, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.muted,
   });
 }
 
-/* Writing over a deck that is open in PowerPoint fails with EBUSY, which used to kill the build
-   outright and leave the previous file in place — so a "clean" check could then be reporting on
-   a stale deck. Fall back to a side file and say so loudly instead. */
+/* A deck open in PowerPoint cannot be replaced — the write fails with EBUSY, which used to kill
+   the build and leave the old file in place, so a later "clean" check would be reporting on a
+   stale deck. Walk the candidates until one is writable rather than failing on the first. */
 const CANDIDATES = [
   process.argv[2] ?? "Aurora-Ops-Overview.pptx",
   "Aurora-Ops-Overview.new.pptx",
   "Aurora-Ops-Overview.v2.pptx",
   "Aurora-Ops-Overview.v3.pptx",
 ];
-
-/* A deck open in PowerPoint cannot be replaced — the write fails with EBUSY, which used to kill
-   the build and leave the old file in place, so a later "clean" check would be reporting on a
-   stale deck. Walk the candidates until one is writable rather than failing on the first. */
 let written = null;
 for (const name of CANDIDATES) {
   try {
