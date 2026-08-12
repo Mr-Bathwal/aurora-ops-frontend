@@ -631,6 +631,45 @@ function icon(s, kind, cx, cy, r = 0.28) {
   });
 }
 
+/* ══════════════════════════ 15 — THANK YOU ══════════════════════════
+ * The finale, and a deliberate rhyme with the title: both the opening and the close sit on the
+ * beam above large type, and both are centred with no eyebrow and no page number — so the deck
+ * is bookended by the same quiet composition. The beam device carries the whole meaning: input
+ * on the left, the inflection, the output on the right — the argument the deck just made,
+ * standing wordlessly behind "Thank you". */
+{
+  const s = pres.addSlide();
+  s.background = { color: C.bg };
+  eyMark(s);
+
+  const MID = 6.665;               // horizontal centre of the wide layout
+  const bw = 3.7;
+  beam(s, { x: MID - bw / 2, y: 2.24, w: bw, scale: 1.55 });
+
+  s.addText("Thank you.", {
+    x: 0, y: 2.72, w: 13.333, h: 1.2, margin: 0, align: "center",
+    fontFace: F.head, fontSize: 66, bold: true, color: C.white,
+  });
+
+  // The one line to personalise. A warm, true default for an internship close — swap it for
+  // your own words.
+  s.addText("For an extraordinary chapter with the EY team.", {
+    x: 0, y: 4.04, w: 13.333, h: 0.5, margin: 0, align: "center",
+    fontFace: F.head, fontSize: 21, color: C.yellow,
+  });
+
+  s.addShape(pres.ShapeType.line, { x: MID - 1.35, y: 5.12, w: 2.7, h: 0, line: { color: C.line, width: 1 } });
+
+  s.addText("Gourav Kumar Bathwal", {
+    x: 0, y: 5.3, w: 13.333, h: 0.34, margin: 0, align: "center",
+    fontFace: F.head, fontSize: 15, bold: true, color: C.white,
+  });
+  s.addText("Aurora Ops  ·  Agentic IT Operations", {
+    x: 0, y: 5.72, w: 13.333, h: 0.3, margin: 0, align: "center",
+    fontFace: F.mono, fontSize: 11.5, color: C.muted, charSpacing: 1,
+  });
+}
+
 /* A deck open in PowerPoint cannot be replaced — the write fails with EBUSY, which used to kill
    the build and leave the old file in place, so a later "clean" check would be reporting on a
    stale deck. Walk the candidates until one is writable rather than failing on the first. */
