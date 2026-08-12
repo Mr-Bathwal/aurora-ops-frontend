@@ -117,8 +117,21 @@ function card(s, { x, y, w, h, fill = C.panel, accent = false }) {
 
 /** All nodes grey now — see the yellow note in the file header. Titled nodes keep the title
  *  larger than the sub-label. */
-function node(s, { x, y, w, h, title, sub }) {
-  s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { color: C.panel }, line: { color: C.line, width: 1 } });
+function node(s, { x, y, w, h, title, sub, accent = false, done = false }) {
+  s.addShape(pres.ShapeType.rect, {
+    x, y, w, h,
+    fill: { color: C.panel },
+    line: { color: accent ? C.yellow : C.line, width: accent ? 1.25 : 1 },
+  });
+  // A yellow left edge (not a solid fill) marks a box the slide wants read as the live focus —
+  // legible title, consistent with the deck's card accent, and no manager "why is one box solid
+  // yellow" problem.
+  if (accent) s.addShape(pres.ShapeType.rect, { x, y, w: 0.07, h, fill: { color: C.yellow }, line: { width: 0 } });
+  // A small check marks a box as handled — the quiet, solved counterpart to an accented one.
+  if (done) {
+    seg(s, x + w - 0.4, y + 0.28, x + w - 0.32, y + 0.36, 2.2, C.grey);
+    seg(s, x + w - 0.32, y + 0.36, x + w - 0.18, y + 0.2, 2.2, C.grey);
+  }
   s.addText(title, {
     x: x + 0.12, y: y + (sub ? 0.12 : (h - 0.42) / 2), w: w - 0.24, h: 0.42, margin: 0,
     fontFace: F.head, fontSize: 12.5, bold: true, color: C.white, align: "center",
@@ -126,7 +139,7 @@ function node(s, { x, y, w, h, title, sub }) {
   if (sub) {
     s.addText(sub, {
       x: x + 0.1, y: y + 0.58, w: w - 0.2, h: 0.46, margin: 0,
-      fontFace: F.mono, fontSize: 9, color: C.muted, align: "center", lineSpacing: 12,
+      fontFace: F.mono, fontSize: 9, color: accent ? C.grey : C.muted, align: "center", lineSpacing: 12,
     });
   }
 }
@@ -254,10 +267,16 @@ function icon(s, kind, cx, cy, r = 0.28) {
     ["Diagnose", "still done by a person"],
     ["Act & verify", "still done by a person"],
   ];
+  // Detect is the solved one (a quiet check); Diagnose and Act & verify are the unsolved gap the
+  // product fills, so they carry the yellow accent. The arrows run yellow, leading the eye out of
+  // the handled step and into the gap — which is exactly the slide's argument.
   stages.forEach(([t, sub], i) => {
     const x = 0.62 + i * 4.05;
-    node(s, { x, y: 2.34, w: 3.5, h: 1.12, title: t, sub });
-    if (i < 2) arrow(s, { x: x + 3.6, y: 2.9, w: 0.35 });
+    node(s, { x, y: 2.34, w: 3.5, h: 1.12, title: t, sub, accent: i > 0, done: i === 0 });
+    if (i < 2) arrow(s, { x: x + 3.6, y: 2.9, w: 0.35, color: C.yellow });
+  });
+  s.addText("Still a person — the judgement Aurora Ops automates.", {
+    x: 4.67, y: 3.66, w: 8.0, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 10, color: C.yellow, charSpacing: 0.5,
   });
 
   // Proofread: each label now reads as a complete sentence with its number, so "under 5%"
