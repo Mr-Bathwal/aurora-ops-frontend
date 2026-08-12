@@ -67,16 +67,15 @@ function beam(s, { x, y, w, scale = 1 }) {
   s.addShape(pres.ShapeType.rect, { x: inflect + knot * 0.7, y, w: x + w - (inflect + knot * 0.7), h: thick, fill: { color: C.yellow }, line: { width: 0 } });
 }
 
-/* ── EY wordmark ──────────────────────────────────────────────────────────────────────────────
- * A text wordmark plus the beam, top-right on every slide — brand presence without reproducing
- * the proprietary logo geometry, which we do not hold. If the team has the official asset under
- * their brand guidelines, drop it in over this. */
+/* ── EY logo ───────────────────────────────────────────────────────────────────────────────────
+ * The official EY logo (Beam over wordmark), supplied by the presenter for their own EY deck,
+ * placed top-right on every slide. Its ground is EY off-black — the exact #2E2E38 of the deck —
+ * so it drops in seamlessly with no cut-out rectangle and needs no transparency. */
+const EY_AR = 1522 / 1560; // measured off the trimmed asset
 function eyMark(s) {
-  s.addText("EY", {
-    x: 11.86, y: 0.32, w: 0.9, h: 0.44, margin: 0,
-    fontFace: F.head, fontSize: 22, bold: true, color: C.white, align: "right",
-  });
-  s.addShape(pres.ShapeType.rect, { x: 12.42, y: 0.78, w: 0.34, h: 0.06, fill: { color: C.yellow }, line: { width: 0 } });
+  const h = 0.66;
+  const w = h * EY_AR;
+  s.addImage({ ...img("ey-logo"), x: 12.68 - w, y: 0.28, w, h });
 }
 
 /* ── Shared chrome ────────────────────────────────────────────────────────────────────────── */
@@ -213,6 +212,23 @@ function icon(s, kind, cx, cy, r = 0.28) {
       seg(s, cx - 0.05, cy - 0.07, cx + 0.05, cy - 0.07, 1.6);
       seg(s, cx + 0.05, cy - 0.07, cx + 0.05, cy - 0.01, 1.6);
       break;
+    case "network": { // correlate across machines — a centre node linked to three satellites
+      const dot = (x, y, fill = C.white) => s.addShape(pres.ShapeType.ellipse, { x: x - 0.028, y: y - 0.028, w: 0.056, h: 0.056, fill: { color: fill }, line: { width: 0 } });
+      const pts = [[cx - 0.12, cy - 0.09], [cx + 0.12, cy - 0.09], [cx, cy + 0.12]];
+      pts.forEach(([px, py]) => seg(s, cx, cy, px, py, 1.5, C.white));
+      pts.forEach(([px, py]) => dot(px, py, C.yellow));
+      dot(cx, cy);
+      break;
+    }
+    case "layers": // read logs from many platforms — three stacked records
+      [-0.09, 0.0, 0.09].forEach((dy) => s.addShape(pres.ShapeType.rect, { x: cx - 0.11, y: cy + dy - 0.018, w: 0.22, h: 0.036, fill: { color: dy === -0.09 ? C.yellow : C.white }, line: { width: 0 } }));
+      break;
+    case "expand": // widen safe action — four arrowheads pushing outward
+      seg(s, cx, cy, cx - 0.11, cy - 0.11, 1.7); seg(s, cx - 0.11, cy - 0.11, cx - 0.04, cy - 0.11, 1.7); seg(s, cx - 0.11, cy - 0.11, cx - 0.11, cy - 0.04, 1.7);
+      seg(s, cx, cy, cx + 0.11, cy - 0.11, 1.7); seg(s, cx + 0.11, cy - 0.11, cx + 0.04, cy - 0.11, 1.7); seg(s, cx + 0.11, cy - 0.11, cx + 0.11, cy - 0.04, 1.7);
+      seg(s, cx, cy, cx - 0.11, cy + 0.11, 1.7); seg(s, cx - 0.11, cy + 0.11, cx - 0.04, cy + 0.11, 1.7); seg(s, cx - 0.11, cy + 0.11, cx - 0.11, cy + 0.04, 1.7);
+      seg(s, cx, cy, cx + 0.11, cy + 0.11, 1.7); seg(s, cx + 0.11, cy + 0.11, cx + 0.04, cy + 0.11, 1.7); seg(s, cx + 0.11, cy + 0.11, cx + 0.11, cy + 0.04, 1.7);
+      break;
   }
 }
 
@@ -306,7 +322,7 @@ function icon(s, kind, cx, cy, r = 0.28) {
       x: x + 0.78, y: 3.22, w: 3.0, h: 0.26, margin: 0,
       fontFace: F.mono, fontSize: 10, bold: true, color: i === 1 ? C.yellow : C.muted, charSpacing: 1.8,
     });
-    s.addText(head, { x: x + 0.78, y: 3.5, w: 3.3, h: 0.3, margin: 0, fontFace: F.head, fontSize: 13.5, bold: true, color: C.white });
+    s.addText(head, { x: x + 0.78, y: 3.47, w: 3.4, h: 0.32, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.white });
     s.addText(body, { x, y: 4.28, w: 3.9, h: 0.9, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16 });
   });
 
@@ -320,7 +336,7 @@ function icon(s, kind, cx, cy, r = 0.28) {
 {
   const s = slide("How It Works", "The agent chooses its own next step.");
 
-  card(s, { x: 0.62, y: 2.16, w: 6.1, h: 4.16 });
+  card(s, { x: 0.62, y: 2.16, w: 6.1, h: 4.16, accent: true });
   s.addText("THE LOOP INSIDE ONE AGENT", { x: 0.96, y: 2.44, w: 5.2, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
   node(s, { x: 1.5, y: 2.94, w: 4.3, h: 0.9, title: "The model decides", sub: "which tool to call next" });
   node(s, { x: 1.5, y: 4.62, w: 4.3, h: 0.9, title: "Your code runs it", sub: "a real reading from the machine" });
@@ -350,7 +366,7 @@ function icon(s, kind, cx, cy, r = 0.28) {
 {
   const s = slide("Orchestration", "Inside, the AI decides — between, we do.");
 
-  card(s, { x: 0.62, y: 2.16, w: 5.86, h: 4.22 });
+  card(s, { x: 0.62, y: 2.16, w: 5.86, h: 4.22, accent: true });
   s.addText("PICKING ONE SPECIALIST", { x: 0.96, y: 2.44, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
   node(s, { x: 1.0, y: 3.7, w: 1.9, h: 1.1, title: "Router", sub: "reads your words" });
   s.addShape(pres.ShapeType.line, { x: 2.9, y: 4.25, w: 0.45, h: 0, line: { color: C.yellow, width: 1.5 } });
@@ -400,13 +416,13 @@ function icon(s, kind, cx, cy, r = 0.28) {
 {
   const s = slide("Fleet Connectivity", "They call us — we never call them.");
 
-  card(s, { x: 0.62, y: 2.4, w: 4.3, h: 2.72 });
-  s.addText("OUR SERVER", { x: 0.96, y: 2.68, w: 3.6, h: 0.26, margin: 0, fontFace: F.head, fontSize: 13, bold: true, color: C.white });
-  s.addText("Pins a job to a list, then waits.\n\nNever leaves the building.", { x: 0.96, y: 3.16, w: 3.6, h: 1.6, margin: 0, fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 18 });
+  card(s, { x: 0.62, y: 2.4, w: 4.3, h: 2.72, accent: true });
+  s.addText("OUR SERVER", { x: 0.96, y: 2.64, w: 3.6, h: 0.3, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.white });
+  s.addText("Pins a job to a list, then waits.\n\nNever leaves the building.", { x: 0.96, y: 3.18, w: 3.6, h: 1.6, margin: 0, fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 18 });
 
   card(s, { x: 8.42, y: 2.4, w: 4.3, h: 2.72, accent: true });
-  s.addText("THEIR MACHINE", { x: 8.76, y: 2.68, w: 3.6, h: 0.26, margin: 0, fontFace: F.head, fontSize: 13, bold: true, color: C.white });
-  s.addText("A small program asks every 3 seconds.\n\nDoes the work locally.", { x: 8.76, y: 3.16, w: 3.6, h: 1.6, margin: 0, fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 18 });
+  s.addText("THEIR MACHINE", { x: 8.76, y: 2.64, w: 3.6, h: 0.3, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.white });
+  s.addText("A small program asks every 3 seconds.\n\nDoes the work locally.", { x: 8.76, y: 3.18, w: 3.6, h: 1.6, margin: 0, fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 18 });
 
   const hops = [
     ["Enrol — once, with a one-time pass", 2.86],
@@ -563,12 +579,13 @@ function icon(s, kind, cx, cy, r = 0.28) {
 
   card(s, { x: 9.6, y: 1.96, w: 3.12, h: 4.46, accent: true });
   s.addText("TIME TO A VERIFIED ANSWER", { x: 9.94, y: 2.26, w: 2.6, h: 0.42, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.muted, charSpacing: 1.2 });
-  s.addText("Manual", { x: 9.94, y: 2.8, w: 1.0, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11, color: C.grey });
-  s.addShape(pres.ShapeType.rect, { x: 9.94, y: 3.1, w: 2.44, h: 0.28, fill: { color: C.line }, line: { width: 0 } });
-  s.addText("~35 min", { x: 11.06, y: 2.78, w: 1.34, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.grey, align: "right" });
-  s.addText("Aurora Ops", { x: 9.94, y: 3.54, w: 1.05, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11, color: C.white });
-  s.addShape(pres.ShapeType.rect, { x: 9.94, y: 3.84, w: 0.14, h: 0.28, fill: { color: C.yellow }, line: { width: 0 } });
-  s.addText("11.8 s", { x: 11.06, y: 3.52, w: 1.34, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.yellow, align: "right" });
+  // A clean number comparison, not a proportional bar. At 11.8s against 35min the yellow bar was
+  // a tiny nub that read as broken; the contrast now lives in the numbers and the multiple.
+  s.addText("Manual", { x: 9.94, y: 2.76, w: 1.0, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey });
+  s.addText("~35 min", { x: 11.0, y: 2.76, w: 1.4, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 11, color: C.grey, align: "right" });
+  s.addText("Aurora Ops", { x: 9.94, y: 3.14, w: 1.02, h: 0.26, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.white });
+  s.addText("11.8 s", { x: 11.0, y: 3.14, w: 1.4, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 11, bold: true, color: C.yellow, align: "right" });
+  s.addText("≈ 180× faster", { x: 9.94, y: 3.64, w: 2.5, h: 0.36, margin: 0, fontFace: F.head, fontSize: 16, bold: true, color: C.yellow });
   s.addShape(pres.ShapeType.line, { x: 9.94, y: 4.4, w: 2.44, h: 0, line: { color: C.line, width: 1 } });
   stat(s, { x: 9.94, y: 4.58, w: 2.5, value: "~11 hrs", label: "saved per week at 20\nroutine investigations", size: 30 });
   s.addText("The 11.8s is measured. The 35 minutes is an estimate, and the saving scales from it.", {
@@ -577,31 +594,40 @@ function icon(s, kind, cx, cy, r = 0.28) {
   s.addNotes("Be straight about the arithmetic. Run times are measured; the 35-minute baseline is an assumption printed on the slide. If pushed, offer to recompute with their number.");
 }
 
-/* ══════════════════════════ 14 — ROADMAP & CLOSE ══════════════════════════ */
+/* ══════════════════════════ 14 — THE ROAD AHEAD ══════════════════════════
+ * A three-phase forward roadmap, drawn as a timeline: an icon node per milestone, connected by
+ * a yellow rail, with a phase tag, a title, and a line of detail beneath each. No "today"
+ * column, no closing bookend, no links — the future is the whole slide. */
 {
-  const s = slide("Roadmap", "Working today, and what comes next.");
+  const s = slide("The Road Ahead", "Three moves from a working tool to a platform.");
 
-  const now = ["Three agents on live machine data", "Orchestrated routing and auto-remediation", "Fleet enrolment over SSH or an agent daemon"];
-  const next = ["Correlate findings across many machines", "Read logs from Splunk, Loki and CloudWatch", "Widen safe action beyond backup and recovery"];
+  const CY = 3.62;                 // the rail, and the centre of every icon node
+  const R = 0.46;                  // icon-node radius
+  const cols = [2.64, 6.665, 10.69];
 
-  [["Working today", now, true], ["Next", next, false]].forEach(([title, items, on], ci) => {
-    const x = 0.62 + ci * 6.15;
-    card(s, { x, y: 1.96, w: 5.83, h: 2.5, accent: on });
-    s.addText(title.toUpperCase(), { x: x + 0.36, y: 2.2, w: 4.9, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 10.5, bold: true, color: on ? C.yellow : C.muted, charSpacing: 1.8 });
-    items.forEach((t, i) => {
-      const y = 2.72 + i * 0.54;
-      s.addShape(pres.ShapeType.rect, { x: x + 0.36, y: y + 0.11, w: 0.16, h: 0.03, fill: { color: on ? C.yellow : C.line }, line: { width: 0 } });
-      s.addText(t, { x: x + 0.68, y, w: 4.85, h: 0.44, margin: 0, fontFace: F.body, fontSize: 12.5, color: on ? C.white : C.grey, lineSpacing: 16 });
-    });
-  });
+  // The rail — drawn in the gaps between nodes so it never crosses an icon.
+  for (let i = 0; i < cols.length - 1; i++) {
+    s.addShape(pres.ShapeType.line, { x: cols[i] + R + 0.06, y: CY, w: cols[i + 1] - cols[i] - 2 * R - 0.12, h: 0, line: { color: C.yellow, width: 1.75 } });
+  }
 
-  // The bookend: slide 02 posed "Detection is solved — judgement is not." This answers it, and
-  // the thesis — not a roadmap or a URL — is what stays on screen through the questions.
-  beam(s, { x: 0.62, y: 5.04, w: 2.9, scale: 0.85 });
-  s.addText("Detection was solved thirty years ago.", { x: 0.6, y: 5.32, w: 12, h: 0.5, margin: 0, fontFace: F.head, fontSize: 22, color: C.grey });
-  s.addText("We automated the judgement.", { x: 0.6, y: 5.86, w: 12, h: 0.56, margin: 0, fontFace: F.head, fontSize: 28, bold: true, color: C.yellow });
-  s.addText("github.com/Mr-Bathwal/aurora-ops-frontend   ·   github.com/Mr-Bathwal/aurora-ops-hub", {
-    x: 0.62, y: 6.72, w: 11.9, h: 0.3, margin: 0, fontFace: F.mono, fontSize: 10.5, color: C.muted,
+  const milestones = [
+    ["network", "Near-term", "Fleet-wide correlation",
+      "See that a failure on one machine caused a failure on another. The transport layer is already built for it."],
+    ["layers", "Mid-term", "Real log platforms",
+      "Read straight from Splunk, Loki and CloudWatch — swap the file reader for a platform client, no agent change."],
+    ["expand", "Horizon", "Wider safe action",
+      "Extend autonomous remediation beyond backup and recovery, one reversible action at a time."],
+  ];
+
+  milestones.forEach(([ic, phase, title, body], i) => {
+    const cx = cols[i];
+    // A filled charcoal disc under the ring so the rail cannot show through the node's centre.
+    s.addShape(pres.ShapeType.ellipse, { x: cx - R, y: CY - R, w: 2 * R, h: 2 * R, fill: { color: C.bg }, line: { width: 0 } });
+    icon(s, ic, cx, CY, R);
+
+    s.addText(phase.toUpperCase(), { x: cx - 1.9, y: CY + R + 0.24, w: 3.8, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 10.5, bold: true, color: C.yellow, charSpacing: 2, align: "center" });
+    s.addText(title, { x: cx - 1.9, y: CY + R + 0.56, w: 3.8, h: 0.4, margin: 0, fontFace: F.head, fontSize: 18, bold: true, color: C.white, align: "center" });
+    s.addText(body, { x: cx - 1.78, y: CY + R + 1.06, w: 3.56, h: 1.1, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16, align: "center" });
   });
 }
 

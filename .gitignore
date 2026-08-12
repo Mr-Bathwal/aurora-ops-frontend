@@ -60,3 +60,7 @@ next-env.d.ts
 
 # Generated slide renders — regenerate with deck/render-deck.ps1
 /deck/render/
+
+# Deck: throwaway render + fallback build (main deck and render/ are the tracked ones)
+/deck/render-new/
+/deck/*.new.pptx
