@@ -24,8 +24,10 @@ if (-not (Test-Path $path)) { Write-Error "No such deck: $path"; exit 1 }
 function Inch([double]$i) { return $i * 72 }
 
 $ppEffectFade          = 1793
+$ppEffectMorph         = 3855   # Morph by object — verified via COM round-trip
 $msoAnimEffectFade     = 10
 $msoAnimTriggerOnClick = 1
+$msoAnimTriggerWith    = 2
 $msoAnimTriggerAfter   = 3
 
 # slide index -> band of shape tops to reveal in sequence, and the axis to order them on.
@@ -49,16 +51,39 @@ $animated = 0
 $clicks = @{}
 
 foreach ($slide in $pres.Slides) {
-  # Same transition everywhere, deliberately.
-  $slide.SlideShowTransition.EntryEffect = $ppEffectFade
-  $slide.SlideShowTransition.Duration = 0.5
+  $idx = [int]$slide.SlideIndex
+
+  # Morph on the content slides: the header (logo, page number, beam, eyebrow) sits identically
+  # on every slide, so Morph glides it while the body cross-fades — one continuous moving scene
+  # instead of a cut. Slide 1 has nothing to morph from, so it keeps a clean fade and instead
+  # carries the auto-reveal below.
+  if ($idx -ge 2) { $slide.SlideShowTransition.EntryEffect = $ppEffectMorph }
+  else            { $slide.SlideShowTransition.EntryEffect = $ppEffectFade }
+  $slide.SlideShowTransition.Duration = 0.7
   $slide.SlideShowTransition.AdvanceOnClick = -1
   $transitioned++
 
   # Re-running must not pile a second set of effects on top of the first.
   while ($slide.TimeLine.MainSequence.Count -gt 0) { $slide.TimeLine.MainSequence.Item(1).Delete() }
 
-  $rule = $rules[[int]$slide.SlideIndex]
+  # The opening slide gets an auto-playing reveal — the beam, then the title, then each line
+  # beneath it fading up one after another. Shapes are grouped by vertical position so the beam's
+  # parts arrive together and the text arrives in reading order. The EY logo (a picture) is left
+  # static so the brand is present from the first frame.
+  if ($idx -eq 1) {
+    $shapes = @($slide.Shapes | Where-Object { $_.Type -ne 13 }) | Sort-Object Top
+    $lastTop = -999.0
+    foreach ($sh in $shapes) {
+      $trig = if ([math]::Abs([double]$sh.Top - $lastTop) -lt 20) { $msoAnimTriggerWith } else { $msoAnimTriggerAfter }
+      $eff = $slide.TimeLine.MainSequence.AddEffect($sh, $msoAnimEffectFade, 0, $trig)
+      $eff.Timing.Duration = 0.55
+      $lastTop = [double]$sh.Top
+      $animated++
+    }
+    continue
+  }
+
+  $rule = $rules[$idx]
   if ($null -eq $rule) { continue }
 
   $lo = Inch $rule.From

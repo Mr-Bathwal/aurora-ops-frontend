@@ -42,6 +42,15 @@ const C = {
 };
 const F = { head: "Arial", body: "Arial", mono: "Consolas" };
 
+/* ── Flow-stage palette ───────────────────────────────────────────────────────────────────────
+ * EY's own brand is yellow-only, so a rainbow would read as un-EY. This sequence is anchored on
+ * EY yellow and built from the product's actual palette — the mint and blue Aurora Ops really
+ * uses — plus two harmonising tones. It is applied as an *accent* (a coloured left edge and
+ * border on an otherwise charcoal box), never a fill, so the deck stays premium and legible.
+ * One ordered sequence, used on every flow slide: box i takes HUES[i], so the colours mean the
+ * same thing everywhere and a reader sees a consistent system rather than decoration. */
+const HUES = ["FFE600", "34D6BE", "FF9F1C", "4AA8E8", "9E8CF0"]; // yellow · mint · amber · blue · violet
+
 const AR = {
   "ss-console": 1.8356, "ss-graph": 1.8148, "ss-dashboard": 1.8399,
   "ss-scene": 1.6252, "ss-hosts": 2.9537, "ss-run": 1.8407,
@@ -110,23 +119,25 @@ function slide(title, subtitle, opts = {}) {
   return s;
 }
 
-function card(s, { x, y, w, h, fill = C.panel, accent = false }) {
-  s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { color: fill }, line: { color: C.line, width: 0.75 } });
-  if (accent) s.addShape(pres.ShapeType.rect, { x, y, w: 0.055, h, fill: { color: C.yellow }, line: { width: 0 } });
+function card(s, { x, y, w, h, fill = C.panel, accent = false, hue = null }) {
+  const edge = hue || (accent ? C.yellow : null);
+  s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { color: fill }, line: { color: edge ? edge : C.line, width: edge ? 0.9 : 0.75 } });
+  if (edge) s.addShape(pres.ShapeType.rect, { x, y, w: 0.055, h, fill: { color: edge }, line: { width: 0 } });
 }
 
 /** All nodes grey now — see the yellow note in the file header. Titled nodes keep the title
  *  larger than the sub-label. */
-function node(s, { x, y, w, h, title, sub, accent = false, done = false }) {
+function node(s, { x, y, w, h, title, sub, hue = null, accent = false, done = false }) {
+  // `hue` is the flow-stage colour; `accent` is legacy shorthand for the yellow one.
+  const edge = hue || (accent ? C.yellow : null);
   s.addShape(pres.ShapeType.rect, {
     x, y, w, h,
     fill: { color: C.panel },
-    line: { color: accent ? C.yellow : C.line, width: accent ? 1.25 : 1 },
+    line: { color: edge || C.line, width: edge ? 1.25 : 1 },
   });
-  // A yellow left edge (not a solid fill) marks a box the slide wants read as the live focus —
-  // legible title, consistent with the deck's card accent, and no manager "why is one box solid
-  // yellow" problem.
-  if (accent) s.addShape(pres.ShapeType.rect, { x, y, w: 0.07, h, fill: { color: C.yellow }, line: { width: 0 } });
+  // A coloured left edge (not a solid fill) marks the box's stage in the flow — legible title,
+  // consistent with the deck's card accent, and no lone solid-colour box.
+  if (edge) s.addShape(pres.ShapeType.rect, { x, y, w: 0.07, h, fill: { color: edge }, line: { width: 0 } });
   // A small check marks a box as handled — the quiet, solved counterpart to an accented one.
   if (done) {
     seg(s, x + w - 0.4, y + 0.28, x + w - 0.32, y + 0.36, 2.2, C.grey);
@@ -139,7 +150,7 @@ function node(s, { x, y, w, h, title, sub, accent = false, done = false }) {
   if (sub) {
     s.addText(sub, {
       x: x + 0.1, y: y + 0.58, w: w - 0.2, h: 0.46, margin: 0,
-      fontFace: F.mono, fontSize: 9, color: accent ? C.grey : C.muted, align: "center", lineSpacing: 12,
+      fontFace: F.mono, fontSize: 9, color: edge ? C.grey : C.muted, align: "center", lineSpacing: 12,
     });
   }
 }
@@ -182,8 +193,8 @@ function seg(s, x1, y1, x2, y2, w = 2, col = C.white) {
   });
 }
 
-function icon(s, kind, cx, cy, r = 0.28) {
-  s.addShape(pres.ShapeType.ellipse, { x: cx - r, y: cy - r, w: 2 * r, h: 2 * r, fill: { type: "none" }, line: { color: C.yellow, width: 1.75 } });
+function icon(s, kind, cx, cy, r = 0.28, hue = C.yellow) {
+  s.addShape(pres.ShapeType.ellipse, { x: cx - r, y: cy - r, w: 2 * r, h: 2 * r, fill: { type: "none" }, line: { color: hue, width: 1.75 } });
   const sq = (x, y) => s.addShape(pres.ShapeType.rect, { x, y, w: 0.07, h: 0.07, fill: { color: C.white }, line: { width: 0 } });
   switch (kind) {
     case "input": // a terminal prompt  ›_
@@ -250,6 +261,7 @@ function icon(s, kind, cx, cy, r = 0.28) {
   const s = pres.addSlide();
   s.background = { color: C.bg };
   eyMark(s);
+  s.addText("AUTOMATING THE JUDGEMENT", { x: 0.92, y: 1.82, w: 9, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 11.5, bold: true, color: C.yellow, charSpacing: 2.8 });
   beam(s, { x: 0.9, y: 2.28, w: 4.4, scale: 1.5 });
   s.addText("Aurora Ops", { x: 0.86, y: 2.84, w: 11, h: 1.12, margin: 0, fontFace: F.head, fontSize: 60, bold: true, color: C.white });
   s.addText("Agentic IT Operations", { x: 0.9, y: 4.02, w: 11, h: 0.5, margin: 0, fontFace: F.head, fontSize: 23, color: C.yellow });
@@ -272,8 +284,8 @@ function icon(s, kind, cx, cy, r = 0.28) {
   // the handled step and into the gap — which is exactly the slide's argument.
   stages.forEach(([t, sub], i) => {
     const x = 0.62 + i * 4.05;
-    node(s, { x, y: 2.34, w: 3.5, h: 1.12, title: t, sub, accent: i > 0, done: i === 0 });
-    if (i < 2) arrow(s, { x: x + 3.6, y: 2.9, w: 0.35, color: C.yellow });
+    node(s, { x, y: 2.34, w: 3.5, h: 1.12, title: t, sub, hue: HUES[i], done: i === 0 });
+    if (i < 2) arrow(s, { x: x + 3.6, y: 2.9, w: 0.35, color: HUES[i] });
   });
   s.addText("Still a person — the judgement Aurora Ops automates.", {
     x: 4.67, y: 3.66, w: 8.0, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 10, color: C.yellow, charSpacing: 0.5,
@@ -306,8 +318,8 @@ function icon(s, kind, cx, cy, r = 0.28) {
   ];
   chain.forEach(([t, sub], i) => {
     const x = 0.62 + i * 3.06;
-    node(s, { x, y: 2.32, w: 2.62, h: 1.18, title: t, sub });
-    if (i < 3) arrow(s, { x: x + 2.68, y: 2.91, w: 0.3 });
+    node(s, { x, y: 2.32, w: 2.62, h: 1.18, title: t, sub, hue: HUES[i] });
+    if (i < 3) arrow(s, { x: x + 2.68, y: 2.91, w: 0.3, color: HUES[i] });
   });
 
   const why = [
@@ -317,7 +329,7 @@ function icon(s, kind, cx, cy, r = 0.28) {
   ];
   why.forEach(([t, b], i) => {
     const x = 0.62 + i * 4.05;
-    card(s, { x, y: 4.16, w: 3.72, h: 2.14, accent: true });
+    card(s, { x, y: 4.16, w: 3.72, h: 2.14, hue: HUES[i] });
     s.addText(t, { x: x + 0.34, y: 4.44, w: 3.14, h: 0.34, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.white });
     s.addText(b, { x: x + 0.34, y: 4.92, w: 3.1, h: 1.24, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16 });
   });
@@ -336,10 +348,15 @@ function icon(s, kind, cx, cy, r = 0.28) {
     ["output", "Output", "A verified answer", "Plain language, a one-word verdict, and the full\nrecord of every step it took to get there.", 9.1],
   ];
   parts.forEach(([ic, tag, head, body, x], i) => {
-    icon(s, ic, x + 0.31, 3.42, 0.3);
+    const cx = x + 0.31;
+    // A coloured drop from the beam down into each block — the connection that ties the spine to
+    // the three stages, in that stage's hue, so the blocks read as one flow rather than three
+    // separate text columns.
+    s.addShape(pres.ShapeType.line, { x: cx, y: 2.84, w: 0, h: 0.26, line: { color: HUES[i], width: 1.6, endArrowType: "triangle" } });
+    icon(s, ic, cx, 3.42, 0.3, HUES[i]);
     s.addText(tag.toUpperCase(), {
       x: x + 0.78, y: 3.22, w: 3.0, h: 0.26, margin: 0,
-      fontFace: F.mono, fontSize: 10, bold: true, color: i === 1 ? C.yellow : C.muted, charSpacing: 1.8,
+      fontFace: F.mono, fontSize: 10, bold: true, color: HUES[i], charSpacing: 1.8,
     });
     s.addText(head, { x: x + 0.78, y: 3.47, w: 3.4, h: 0.32, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.white });
     s.addText(body, { x, y: 4.28, w: 3.9, h: 0.9, margin: 0, fontFace: F.body, fontSize: 11.5, color: C.grey, lineSpacing: 16 });
@@ -357,8 +374,8 @@ function icon(s, kind, cx, cy, r = 0.28) {
 
   card(s, { x: 0.62, y: 2.16, w: 6.1, h: 4.16, accent: true });
   s.addText("THE LOOP INSIDE ONE AGENT", { x: 0.96, y: 2.44, w: 5.2, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
-  node(s, { x: 1.5, y: 2.94, w: 4.3, h: 0.9, title: "The model decides", sub: "which tool to call next" });
-  node(s, { x: 1.5, y: 4.62, w: 4.3, h: 0.9, title: "Your code runs it", sub: "a real reading from the machine" });
+  node(s, { x: 1.5, y: 2.94, w: 4.3, h: 0.9, title: "The model decides", sub: "which tool to call next", hue: HUES[0] });
+  node(s, { x: 1.5, y: 4.62, w: 4.3, h: 0.9, title: "Your code runs it", sub: "a real reading from the machine", hue: HUES[1] });
   s.addShape(pres.ShapeType.line, { x: 2.2, y: 3.84, w: 0, h: 0.78, line: { color: C.yellow, width: 1.5, endArrowType: "triangle" } });
   s.addShape(pres.ShapeType.line, { x: 5.1, y: 3.84, w: 0, h: 0.78, line: { color: C.yellow, width: 1.5, beginArrowType: "triangle" } });
   s.addText("repeats until it has seen enough", { x: 1.5, y: 5.68, w: 4.3, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 9.5, color: C.muted, align: "center" });
@@ -387,21 +404,21 @@ function icon(s, kind, cx, cy, r = 0.28) {
 
   card(s, { x: 0.62, y: 2.16, w: 5.86, h: 4.22, accent: true });
   s.addText("PICKING ONE SPECIALIST", { x: 0.96, y: 2.44, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.muted, charSpacing: 1.4 });
-  node(s, { x: 1.0, y: 3.7, w: 1.9, h: 1.1, title: "Router", sub: "reads your words" });
-  s.addShape(pres.ShapeType.line, { x: 2.9, y: 4.25, w: 0.45, h: 0, line: { color: C.yellow, width: 1.5 } });
-  s.addShape(pres.ShapeType.line, { x: 3.35, y: 3.29, w: 0, h: 1.92, line: { color: C.yellow, width: 1.5 } });
+  node(s, { x: 1.0, y: 3.7, w: 1.9, h: 1.1, title: "Router", sub: "reads your words", hue: HUES[0] });
+  s.addShape(pres.ShapeType.line, { x: 2.9, y: 4.25, w: 0.45, h: 0, line: { color: C.line, width: 1.5 } });
+  s.addShape(pres.ShapeType.line, { x: 3.35, y: 3.29, w: 0, h: 1.92, line: { color: C.line, width: 1.5 } });
   ["System Health", "Log Analyzer", "Backup & DR"].forEach((t, i) => {
     const cy = 3.29 + i * 0.96;
-    arrow(s, { x: 3.35, y: cy, w: 0.5, color: C.yellow });
-    node(s, { x: 3.85, y: cy - 0.38, w: 2.25, h: 0.76, title: t });
+    arrow(s, { x: 3.35, y: cy, w: 0.5, color: HUES[i] });
+    node(s, { x: 3.85, y: cy - 0.38, w: 2.25, h: 0.76, title: t, hue: HUES[i] });
   });
 
   card(s, { x: 6.86, y: 2.16, w: 5.86, h: 4.22, accent: true });
   s.addText("DIAGNOSE · DECIDE · ACT · VERIFY", { x: 7.2, y: 2.44, w: 5, h: 0.26, margin: 0, fontFace: F.mono, fontSize: 9.5, bold: true, color: C.yellow, charSpacing: 1.4 });
   const steps = ["Read the evidence", "Does it need a fix?", "Take the fix", "Check it actually worked"];
   steps.forEach((t, i) => {
-    node(s, { x: 7.3, y: 2.86 + i * 0.8, w: 5.0, h: 0.58, title: t });
-    if (i < 3) s.addShape(pres.ShapeType.line, { x: 9.8, y: 3.44 + i * 0.8, w: 0, h: 0.22, line: { color: C.yellow, width: 1.4, endArrowType: "triangle" } });
+    node(s, { x: 7.3, y: 2.86 + i * 0.8, w: 5.0, h: 0.58, title: t, hue: HUES[i] });
+    if (i < 3) s.addShape(pres.ShapeType.line, { x: 9.8, y: 3.44 + i * 0.8, w: 0, h: 0.22, line: { color: HUES[i], width: 1.4, endArrowType: "triangle" } });
   });
   s.addText("No fix needed? It skips straight to verifying.", {
     x: 7.3, y: 6.14, w: 5.0, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9.5, color: C.dim, align: "center",
@@ -424,8 +441,9 @@ function icon(s, kind, cx, cy, r = 0.28) {
   feats.forEach(([ic, t, b], i) => {
     const x = 0.62 + (i % 3) * 4.05;
     const y = 2.12 + Math.floor(i / 3) * 2.2;
-    card(s, { x, y, w: 3.72, h: 1.94, accent: true });
-    icon(s, ic, x + 0.55, y + 0.5, 0.24);
+    const hue = HUES[i % HUES.length];
+    card(s, { x, y, w: 3.72, h: 1.94, hue });
+    icon(s, ic, x + 0.55, y + 0.5, 0.24, hue);
     s.addText(t, { x: x + 0.34, y: y + 0.88, w: 3.14, h: 0.34, margin: 0, fontFace: F.head, fontSize: 14, bold: true, color: C.white });
     s.addText(b, { x: x + 0.34, y: y + 1.26, w: 3.1, h: 0.56, margin: 0, fontFace: F.body, fontSize: 11, color: C.grey, lineSpacing: 15 });
   });
@@ -435,11 +453,11 @@ function icon(s, kind, cx, cy, r = 0.28) {
 {
   const s = slide("Fleet Connectivity", "They call us — we never call them.");
 
-  card(s, { x: 0.62, y: 2.4, w: 4.3, h: 2.72, accent: true });
+  card(s, { x: 0.62, y: 2.4, w: 4.3, h: 2.72, hue: HUES[0] });
   s.addText("OUR SERVER", { x: 0.96, y: 2.64, w: 3.6, h: 0.3, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.white });
   s.addText("Pins a job to a list, then waits.\n\nNever leaves the building.", { x: 0.96, y: 3.18, w: 3.6, h: 1.6, margin: 0, fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 18 });
 
-  card(s, { x: 8.42, y: 2.4, w: 4.3, h: 2.72, accent: true });
+  card(s, { x: 8.42, y: 2.4, w: 4.3, h: 2.72, hue: HUES[1] });
   s.addText("THEIR MACHINE", { x: 8.76, y: 2.64, w: 3.6, h: 0.3, margin: 0, fontFace: F.head, fontSize: 15, bold: true, color: C.white });
   s.addText("A small program asks every 3 seconds.\n\nDoes the work locally.", { x: 8.76, y: 3.18, w: 3.6, h: 1.6, margin: 0, fontFace: F.body, fontSize: 12, color: C.grey, lineSpacing: 18 });
 
@@ -453,12 +471,14 @@ function icon(s, kind, cx, cy, r = 0.28) {
     s.addText(label, { x: 5.08, y: y - 0.34, w: 3.26, h: 0.28, margin: 0, fontFace: F.mono, fontSize: 9.5, color: C.yellow, align: "center" });
   });
 
-  s.addShape(pres.ShapeType.line, { x: 5.6, y: 5.46, w: 2.2, h: 0, line: { color: C.line, width: 1.4, dashType: "dash" } });
-  seg(s, 6.56, 5.34, 6.8, 5.58, 1.8, C.dim);
-  seg(s, 6.8, 5.34, 6.56, 5.58, 1.8, C.dim);
-  s.addText("No connection ever runs this way — nothing inbound is opened on their network.", {
-    x: 0.62, y: 5.86, w: 11.9, h: 0.32, margin: 0, fontFace: F.body, fontSize: 12.5, color: C.grey, align: "center",
-  });
+  // A themed takeaway strip instead of the old crossed-out line: a full-width panel that states
+  // the security property directly, with the load-bearing word in yellow.
+  card(s, { x: 0.62, y: 5.5, w: 12.1, h: 0.72, hue: HUES[1] });
+  s.addText([
+    { text: "Every connection starts on ", options: { color: C.grey } },
+    { text: "their", options: { color: C.yellow, bold: true } },
+    { text: " side — nothing inbound is ever opened, so it crosses any firewall.", options: { color: C.grey } },
+  ], { x: 0.62, y: 5.5, w: 12.1, h: 0.72, margin: 0, fontFace: F.body, fontSize: 13, align: "center", valign: "middle" });
   s.addNotes("This answers 'how would you ever get into a customer's network?'. You do not. They come to you, and that is why no firewall change is needed.");
 }
 
@@ -494,8 +514,8 @@ function icon(s, kind, cx, cy, r = 0.28) {
   ];
   chain.forEach(([t, sub], i) => {
     const x = 0.62 + i * 2.45;
-    node(s, { x, y: 2.16, w: 2.06, h: 1.14, title: t, sub });
-    if (i < 4) arrow(s, { x: x + 2.12, y: 2.73, w: 0.28, color: C.yellow });
+    node(s, { x, y: 2.16, w: 2.06, h: 1.14, title: t, sub, hue: HUES[i] });
+    if (i < 4) arrow(s, { x: x + 2.12, y: 2.73, w: 0.28, color: HUES[i] });
   });
 
   s.addShape(pres.ShapeType.line, { x: 10.42, y: 3.44, w: 0, h: 0.36, line: { color: C.yellow, width: 1.5 } });
@@ -510,7 +530,7 @@ function icon(s, kind, cx, cy, r = 0.28) {
   ];
   cols.forEach(([t, b], i) => {
     const x = 0.62 + i * 4.05;
-    card(s, { x, y: 4.48, w: 3.72, h: 1.9, accent: true });
+    card(s, { x, y: 4.48, w: 3.72, h: 1.9, hue: HUES[i] });
     // Title larger than the body beneath it (was smaller — a review correction).
     s.addText(t, { x: x + 0.34, y: 4.72, w: 3.1, h: 0.3, margin: 0, fontFace: F.head, fontSize: 14, bold: true, color: C.white });
     s.addText(b, { x: x + 0.34, y: 5.16, w: 3.14, h: 1.06, margin: 0, fontFace: F.mono, fontSize: 11, color: C.grey, lineSpacing: 16 });
@@ -599,7 +619,7 @@ function icon(s, kind, cx, cy, r = 0.28) {
   s.addShape(pres.ShapeType.line, { x: AUTx, y: 4.42, w: AUTw, h: 0, line: { color: C.yellow, width: 1 } });
 
   const gains = [
-    ["Time to a verified answer", "about 35 minutes", "seconds"],
+    ["Time to a verified answer", "about 35 minutes", "≈ 10 seconds"],
     ["Checks per investigation", "whatever you recall", "up to 11, chosen live"],
     ["Record of what was done", "a ticket comment", "every tool call, logged"],
   ];
@@ -626,8 +646,8 @@ function icon(s, kind, cx, cy, r = 0.28) {
 
   s.addText("AUTOMATION", { x: bx, y: 3.56, w: 2.2, h: 0.24, margin: 0, fontFace: F.mono, fontSize: 9, bold: true, color: C.yellow, charSpacing: 1.6 });
   s.addShape(pres.ShapeType.rect, { x: bx, y: 3.82, w: bw, h: barH, fill: { color: C.yellow }, line: { width: 0 } });
-  s.addText("Seconds", { x: bx + 0.2, y: 3.82, w: 1.05, h: barH, margin: 0, fontFace: F.head, fontSize: 18, bold: true, color: C.bg, valign: "middle" });
-  s.addText("30×+ faster", { x: bx + 1.3, y: 3.82, w: bw - 1.5, h: barH, margin: 0, fontFace: F.mono, fontSize: 10, bold: true, color: C.bg, align: "right", valign: "middle" });
+  s.addText("≈ 10 sec", { x: bx + 0.2, y: 3.82, w: 1.25, h: barH, margin: 0, fontFace: F.head, fontSize: 18, bold: true, color: C.bg, valign: "middle" });
+  s.addText("30×+ faster", { x: bx + 1.46, y: 3.82, w: bw - 1.64, h: barH, margin: 0, fontFace: F.mono, fontSize: 10, bold: true, color: C.bg, align: "right", valign: "middle" });
 
   s.addShape(pres.ShapeType.line, { x: 9.94, y: 4.68, w: 2.44, h: 0, line: { color: C.line, width: 1 } });
   stat(s, { x: 9.94, y: 4.84, w: 2.5, value: "~11 hrs", label: "saved per week at 20\nroutine investigations", size: 28 });
