@@ -12,6 +12,7 @@ import {
   type MotionValue,
 } from "framer-motion";
 import { Activity, DatabaseBackup, ScrollText } from "lucide-react";
+import { useTilt } from "@/components/motion/use-tilt";
 import { AGENT_CATALOG, type CatalogAgent } from "@/components/agents/agent-catalog";
 
 /** The fleet, as a scattered constellation that assembles itself on scroll.
@@ -46,9 +47,9 @@ const ICONS: Record<string, typeof Activity> = {
 /** Card positions, as offsets from the centred column. The wrapper is the containing block,
  * so `dx` resolves against its width and `dy` against its height. */
 const SCATTER = [
-  { dx: "-30%", dy: "0%" },
-  { dx: "30%", dy: "10%" },
-  { dx: "0%", dy: "0%" },
+  { dx: "-30%", dy: "0%", turn: 32 },
+  { dx: "30%", dy: "10%", turn: -32 },
+  { dx: "0%", dy: "0%", turn: 0 },
 ] as const;
 
 const FLEET = AGENT_CATALOG.slice(0, SCATTER.length);
@@ -80,7 +81,15 @@ function FleetTile({
   const shift = useTransform(progress, [from, to], [16, 0], { ease: easeOut });
 
   const Icon = ICONS[agent.key] ?? Activity;
-  const { dx, dy } = SCATTER[index];
+  const { dx, dy, turn } = SCATTER[index];
+
+  // Each card flies in from depth: turned toward the centre on its own side, tipped back and
+  // pushed away, then swings square to the reader as it lands.
+  const rotateY = useTransform(progress, [from, to], [turn, 0], { ease: easeOut });
+  const rotateX = useTransform(progress, [from, to], [18, 0], { ease: easeOut });
+  const z = useTransform(progress, [from, to], [-220, 0], { ease: easeOut });
+
+  const tilt = useTilt(10);
 
   return (
     <motion.div
@@ -94,37 +103,49 @@ function FleetTile({
           opacity: still ? 1 : opacity,
           x: still ? 0 : shift,
           y: still ? 0 : shift,
+          rotateX: still ? 0 : rotateX,
+          rotateY: still ? 0 : rotateY,
+          z: still ? 0 : z,
+          transformPerspective: 1200,
         } as React.CSSProperties
       }
     >
-      <Link
-        href={`/run?tab=${agent.runnable}&autorun=1`}
-        className="group relative flex flex-col items-center justify-center gap-4 overflow-hidden rounded-[20px] p-10"
-        style={{ backgroundImage: "linear-gradient(69deg, var(--surface), transparent 63%)" }}
-      >
-        {/* The same gradient one step brighter, faded in under the cursor. Two layers rather
-            than a transition on background-image, which browsers cannot interpolate. */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ backgroundImage: "linear-gradient(69deg, var(--surface-2), transparent 63%)" }}
-        />
-        <Icon
-          size={32}
-          strokeWidth={1.75}
-          className="relative shrink-0 transition-transform duration-300 group-hover:scale-110"
-          style={{ color: agent.color, filter: `drop-shadow(0 0 10px ${agent.color}55)` }}
-          aria-hidden
-        />
-        {/* `self-stretch` with the row left-aligned: the label sets the card's width and the
-            icon centres over it, which is what gives the three cards their uneven widths. */}
-        <span className="relative flex w-full items-center gap-2">
-          <span className="size-2 shrink-0 rounded-full bg-brand-2" />
-          <span className="whitespace-nowrap text-lead text-muted-foreground transition-colors group-hover:text-foreground">
-            {agent.name}
+      <motion.div {...tilt.handlers} style={tilt.style} className="rounded-[20px]">
+        <Link
+          href={`/run?tab=${agent.runnable}&autorun=1`}
+          className="group relative flex flex-col items-center justify-center gap-4 overflow-hidden rounded-[20px] p-10"
+          style={{ backgroundImage: "linear-gradient(69deg, var(--surface), transparent 63%)" }}
+        >
+          {/* The same gradient one step brighter, faded in under the cursor. Two layers rather
+              than a transition on background-image, which browsers cannot interpolate. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{ backgroundImage: "linear-gradient(69deg, var(--surface-2), transparent 63%)" }}
+          />
+          {/* Glare that tracks the pointer while the card tilts toward it. */}
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{ background: tilt.glare }}
+          />
+          <Icon
+            size={32}
+            strokeWidth={1.75}
+            className="relative shrink-0 transition-transform duration-300 group-hover:scale-110"
+            style={{ color: agent.color, filter: `drop-shadow(0 0 10px ${agent.color}55)` }}
+            aria-hidden
+          />
+          {/* `self-stretch` with the row left-aligned: the label sets the card's width and the
+              icon centres over it, which is what gives the three cards their uneven widths. */}
+          <span className="relative flex w-full items-center gap-2">
+            <span className="size-2 shrink-0 rounded-full bg-brand-2" />
+            <span className="whitespace-nowrap text-lead text-muted-foreground transition-colors group-hover:text-foreground">
+              {agent.name}
+            </span>
           </span>
-        </span>
-      </Link>
+        </Link>
+      </motion.div>
     </motion.div>
   );
 }

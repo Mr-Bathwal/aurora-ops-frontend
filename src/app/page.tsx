@@ -28,12 +28,12 @@ export default function DashboardPage() {
 
       {/* Who it's for. Floor tone: the diagram is a dark space scene and wants the page's own
           near-black behind it, not a raised plate. */}
-      <SectionBand tone="floor">
+      <SectionBand tone="floor" depth>
         <DesignedFor />
       </SectionBand>
 
       {/* The fleet — the reference's feature grid. */}
-      <SectionBand tone="raised">
+      <SectionBand tone="raised" depth>
         <SectionHeading
           eyebrow="Deployed sentinels"
           sub="Each one owns a corner of the stack — watching, reading, and acting the moment its patch of the world goes wrong."
@@ -62,21 +62,21 @@ export default function DashboardPage() {
           raised band it would be the same colour as the band it sits on and survive only as
           an outline. The reference does the same thing: its card is #0c0f14 on a #050707
           body. Everything below shifts a tone to keep the alternation going. */}
-      <SectionBand tone="floor" className="steps-glass">
+      <SectionBand tone="floor" className="steps-glass" depth>
         <StepFlow />
       </SectionBand>
 
       {/* The outcome. Pure black rather than a tone from the ramp: both pieces of art here
           composite with `mix-blend-mode: screen` and were floored to true black on export, so
           on #000 they leave the band untouched and read as light with no plate under them. */}
-      <SectionBand tone="floor" className="bg-black">
+      <SectionBand tone="floor" className="bg-black" depth>
         <OutcomeRing />
       </SectionBand>
 
       {/* The close. `-mb-36` cancels the shell's `pb-36`: main pads its bottom for the ordinary
           content pages, but a full-bleed band has already carried its own `py-24`, so that
           padding would land as a strip of page floor between the last band and the footer. */}
-      <SectionBand tone="raised" className="-mb-36">
+      <SectionBand tone="raised" className="-mb-36" depth>
         <FinalCta />
       </SectionBand>
     </>
