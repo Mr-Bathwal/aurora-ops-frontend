@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { ScrollDepth } from "@/components/motion/scroll-depth";
 
 /** A full-bleed section band.
  *
@@ -12,17 +13,23 @@ import { cn } from "@/lib/utils";
  * tied to the viewport, minus the scrollbar (see SmoothScroll) so it never adds a horizontal
  * scroll. `tone="raised"` paints the surface and gives the band a lit lip top and bottom;
  * `tone="floor"` is transparent, so the page's own near-black shows through.
+ *
+ * `depth` swings the band's content up out of the page as it scrolls in (see ScrollDepth).
+ * Only the content moves — the band's own surface stays put, so the alternating tones
+ * still meet edge to edge while the chapter inside them rises into place.
  */
 export function SectionBand({
   children,
   tone = "floor",
   className,
   innerClassName,
+  depth = false,
 }: {
   children: ReactNode;
   tone?: "floor" | "raised";
   className?: string;
   innerClassName?: string;
+  depth?: boolean;
 }) {
   return (
     <section
@@ -38,7 +45,9 @@ export function SectionBand({
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/[0.06]" />
         </>
       )}
-      <div className={cn("mx-auto max-w-screen-xl px-6 py-24 sm:px-8", innerClassName)}>{children}</div>
+      <div className={cn("mx-auto max-w-screen-xl px-6 py-24 sm:px-8", innerClassName)}>
+        {depth ? <ScrollDepth>{children}</ScrollDepth> : children}
+      </div>
     </section>
   );
 }
