@@ -3,7 +3,6 @@ import { Manrope, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 import { SmoothScroll } from "@/components/layout/smooth-scroll";
-import { ScrollProgress } from "@/components/layout/scroll-progress";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -40,7 +39,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`dark ${manrope.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen">
         <SmoothScroll />
-        <ScrollProgress />
         <TooltipProvider delay={200}>
           <AppShell>{children}</AppShell>
         </TooltipProvider>

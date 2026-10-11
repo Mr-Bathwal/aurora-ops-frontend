@@ -1,15 +1,7 @@
 "use client";
 
-import { useRef } from "react";
 import { useRouter } from "next/navigation";
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-  type Variants,
-} from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { HeroBackdrop } from "@/components/home/hero-backdrop";
 import { OrchestrationScene } from "@/components/home/orchestration-scene";
@@ -50,30 +42,11 @@ const rise: Variants = {
 
 export function Hero() {
   const router = useRouter();
-  const reduce = useReducedMotion();
-
-  // The copy lifts away and fades as the page leaves the hero: it is read, the console
-  // takes over, and nothing is left floating under the navbar.
-  const section = useRef<HTMLElement>(null);
-  const { scrollYProgress: leave } = useScroll({ target: section, offset: ["start start", "end start"] });
-  const copyY = useTransform(leave, [0, 0.5], [0, -120]);
-  const copyOpacity = useTransform(leave, [0, 0.4], [1, 0]);
-  const copyBlur = useTransform(leave, [0, 0.4], ["blur(0px)", "blur(6px)"]);
-
-  // The console arrives tipped back on its bottom edge, like a screen seen from a desk, and
-  // swings upright as it is scrolled toward the middle of the window. Scroll-linked, so it
-  // tracks the wheel both ways rather than playing once.
-  const card = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: arrive } = useScroll({ target: card, offset: ["start end", "start 0.18"] });
-  const a = useSpring(arrive, { stiffness: 120, damping: 24, mass: 0.4 });
-  const cardRotate = useTransform(a, [0, 1], [28, 0]);
-  const cardScale = useTransform(a, [0, 1], [0.9, 1]);
-  const cardY = useTransform(a, [0, 1], [40, 0]);
 
   // -mt-8 cancels the shell's own py-8 so this section's geometry is measured from the
   // navbar, not from an inherited gutter.
   return (
-    <section ref={section} className="relative isolate -mt-8 pt-[51px]">
+    <section className="relative isolate -mt-8 pt-[51px]">
       {/* Full-bleed sky, pulled up behind the navbar so the plate runs to the top of the
           window the way it does on the reference — a sky that starts below the chrome reads
           as a panel rather than as the room the page is in.
@@ -99,10 +72,7 @@ export function Hero() {
 
       {/* Copy sits in a centred, narrow measure inside the shell's normal content width.
           Only the product frame below breaks out to full width. */}
-      <motion.div
-        className="mx-auto max-w-[960px] px-6 text-center"
-        style={reduce ? undefined : { y: copyY, opacity: copyOpacity, filter: copyBlur }}
-      >
+      <div className="mx-auto max-w-[960px] px-6 text-center">
           <motion.h1
             initial="hidden"
             animate="show"
@@ -171,7 +141,7 @@ export function Hero() {
               Watch it work
             </button>
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* The main card. The reference pairs its dashboard with a right-hand insights
             column; ours pairs the interactive orchestration scene with a live fleet-overview
@@ -192,15 +162,7 @@ export function Hero() {
           }}
         >
           {/* 84vw, capped, centred — the reference's proportions. */}
-          <motion.div
-            ref={card}
-            className="relative mx-auto w-[84%] max-w-[1600px] origin-bottom"
-            style={
-              reduce
-                ? undefined
-                : { rotateX: cardRotate, scale: cardScale, y: cardY, transformPerspective: 1600 }
-            }
-          >
+          <div className="relative mx-auto w-[84%] max-w-[1600px]">
             {/* Ambient pool behind the card — visible only in the margins around it, since
                 the card itself is opaque. Left of centre, under where the beam lands. */}
             <div
@@ -276,7 +238,7 @@ export function Hero() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
     </section>
   );
