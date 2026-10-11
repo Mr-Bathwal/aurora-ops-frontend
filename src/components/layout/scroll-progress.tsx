@@ -1,12 +1,15 @@
 "use client";
 
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 
 /** A hairline of the brand gradient across the top of the window, filling as the page is
- * read. Sits above the navbar and takes no pointer events. */
+ * read. Sits above the navbar and takes no pointer events. Not rendered at all under
+ * `prefers-reduced-motion`. */
 export function ScrollProgress() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 180, damping: 30, mass: 0.3 });
+  const reduce = useReducedMotion();
+  if (reduce) return null;
 
   return (
     <motion.div

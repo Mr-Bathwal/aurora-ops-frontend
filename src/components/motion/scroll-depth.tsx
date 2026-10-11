@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils";
  * The perspective lives on the element (`transformPerspective`) rather than on a wrapper:
  * once it has settled every value is at identity and framer writes `transform: none`, so a
  * resting section carries no stacking context and its screen-blended art composites against
- * the page exactly as it did before this existed.
+ * the page exactly as it did before this existed. No `will-change: transform` for the same
+ * reason: it would pin a stacking context on permanently.
  */
 export function ScrollDepth({
   children,
@@ -41,7 +42,7 @@ export function ScrollDepth({
   return (
     <motion.div
       ref={ref}
-      className={cn("origin-bottom will-change-transform", className)}
+      className={cn("origin-bottom", className)}
       style={reduce ? undefined : { rotateX, y, scale, opacity, transformPerspective: 1400 }}
     >
       {children}

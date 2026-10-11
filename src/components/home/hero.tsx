@@ -194,7 +194,7 @@ export function Hero() {
           {/* 84vw, capped, centred — the reference's proportions. */}
           <motion.div
             ref={card}
-            className="relative mx-auto w-[84%] max-w-[1600px] origin-bottom will-change-transform"
+            className="relative mx-auto w-[84%] max-w-[1600px] origin-bottom"
             style={
               reduce
                 ? undefined

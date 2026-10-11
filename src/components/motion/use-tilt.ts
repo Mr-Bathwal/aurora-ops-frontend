@@ -7,7 +7,8 @@ import { useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTran
  * follows the pointer across the surface. Springs back flat when the pointer leaves.
  *
  * Returns the style for the card, the background for a glare layer, and the handlers. Under
- * `prefers-reduced-motion` the style is empty and the handlers do nothing. */
+ * `prefers-reduced-motion` the style is empty, the handlers do nothing and `glare` is
+ * undefined, so callers render no glare layer at all. */
 export function useTilt(max = 8) {
   const reduce = useReducedMotion();
   // Pointer position across the card, 0..1 on each axis, resting at the centre.
@@ -34,7 +35,7 @@ export function useTilt(max = 8) {
 
   return {
     style: reduce ? {} : { rotateX, rotateY, transformPerspective: 1000 },
-    glare,
+    glare: reduce ? undefined : glare,
     handlers: { onPointerMove, onPointerLeave },
   };
 }

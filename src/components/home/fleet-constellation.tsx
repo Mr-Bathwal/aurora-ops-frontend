@@ -124,11 +124,13 @@ function FleetTile({
             style={{ backgroundImage: "linear-gradient(69deg, var(--surface-2), transparent 63%)" }}
           />
           {/* Glare that tracks the pointer while the card tilts toward it. */}
-          <motion.span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            style={{ background: tilt.glare }}
-          />
+          {!still && tilt.glare && (
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              style={{ background: tilt.glare }}
+            />
+          )}
           <Icon
             size={32}
             strokeWidth={1.75}
